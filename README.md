@@ -1,0 +1,66 @@
+# 💻 IT Support to the Rescue!
+
+A pixel-art platformer where you fix devices, stomp enemies and survive the
+school IT support shift from hell. Single-file HTML5 canvas game — no build
+step, no dependencies (just a Google Fonts CDN).
+
+🎮 **Play it:** https://sambayford.github.io/IT-Support-to-the-Rescue/ *(once
+GitHub Pages is enabled — see [Deployment](#deployment))*
+
+## Controls
+
+| Action | Keyboard | Touch |
+| --- | --- | --- |
+| Move | Arrow keys / WASD | ◀ ▶ buttons |
+| Jump | Space / W / Up arrow | 🔼 button |
+| Fix a device | Walk into it | Walk into it |
+| Stomp an enemy | Jump on top of it | Jump on top of it |
+| Continue after a zone clears | Space / Enter / tap | Tap |
+| Restart after death | R | Tap **Reboot** |
+| Mute / unmute | 🔊 button in the HUD | 🔊 button in the HUD |
+
+## Gameplay
+
+- 🔧 Walk into broken devices to start fixing — hold position until the
+  progress bar fills.
+- 👟 Jump on enemies' heads to stomp them. Touching them any other way costs
+  HP.
+- ☕ Coffee gives you 5 seconds of turbo speed and faster fixes.
+- 💾 USB drives, 🔌 Ethernet cables and 📘 manuals are score pickups.
+- 🍩 Donuts heal 1 HP.
+- ⚠️ Every 10th zone is a **boss zone** — face the Headteacher.
+
+## Local development
+
+It's a single static HTML file. Open it directly in a browser:
+
+```sh
+open index.html
+```
+
+…or serve it locally if you want to test on a phone:
+
+```sh
+python3 -m http.server 8000
+# then visit http://<your-mac-ip>:8000 from the phone
+```
+
+## Deployment
+
+The game auto-deploys to GitHub Pages on every push to `main` via
+`.github/workflows/pages.yml`. To enable Pages the first time:
+
+1. Push to `main`.
+2. In GitHub: **Settings → Pages → Build and deployment → Source: GitHub
+   Actions**.
+3. Wait for the workflow run to complete; the site URL appears in the
+   workflow's `deploy` job output.
+
+## Browser support
+
+Tested in current Safari (macOS / iOS). Should also work in Chrome, Firefox
+and Edge — uses standard Canvas 2D and Web Audio APIs.
+
+## Licence
+
+MIT — see [LICENSE](LICENSE).
