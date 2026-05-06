@@ -4,8 +4,7 @@ A pixel-art platformer where you fix devices, stomp enemies and survive the
 school IT support shift from hell. Single-file HTML5 canvas game — no build
 step, no dependencies (just a Google Fonts CDN).
 
-🎮 **Play it:** https://sambayford.github.io/IT-Support-to-the-Rescue/ *(once
-GitHub Pages is enabled — see [Deployment](#deployment))*
+🎮 **Play it:** https://sambayford.github.io/IT-Support-to-the-Rescue/ 
 
 ## Controls
 
@@ -44,17 +43,6 @@ open index.html
 python3 -m http.server 8000
 # then visit http://<your-mac-ip>:8000 from the phone
 ```
-
-## Deployment
-
-The game auto-deploys to GitHub Pages on every push to `main` via
-`.github/workflows/pages.yml`. To enable Pages the first time:
-
-1. Push to `main`.
-2. In GitHub: **Settings → Pages → Build and deployment → Source: GitHub
-   Actions**.
-3. Wait for the workflow run to complete; the site URL appears in the
-   workflow's `deploy` job output.
 
 ## Browser support
 
