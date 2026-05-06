@@ -4,7 +4,7 @@ A pixel-art platformer where you fix devices, stomp enemies and survive the
 school IT support shift from hell. Single-file HTML5 canvas game — no build
 step, no dependencies (just a Google Fonts CDN).
 
-🎮 **Play it:** https://sambayford.github.io/ITS-A-GAME/ 
+🎮 **Play it:** https://sambayford.github.io/IT-S-A-GAME/ 
 
 ## Controls
 
