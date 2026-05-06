@@ -1,0 +1,16 @@
+# macOS
+.DS_Store
+
+# Editor / IDE
+.idea/
+.vscode/
+*.swp
+
+# Logs
+*.log
+
+# Local development files
+node_modules/
+
+# Project-local TODO list (not for source control)
+TODO.md

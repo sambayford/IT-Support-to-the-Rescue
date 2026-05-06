@@ -3,6 +3,15 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+<meta name="description" content="A pixel-art platformer where you fix devices, stomp enemies and survive the IT support shift from hell.">
+<meta name="theme-color" content="#0a0a1a">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="IT Support">
+<meta property="og:title" content="IT Support to the Rescue!">
+<meta property="og:description" content="A pixel-art platformer about saving the school's IT, one ticket at a time.">
+<meta property="og:type" content="website">
+<link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>💻</text></svg>">
 <title>IT Support to the Rescue!</title>
 <style>
   @import url('https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap');
@@ -30,9 +39,11 @@
   #hstable{font-family:monospace;font-size:14px;color:#aaffcc;text-align:center;line-height:1.7;}
   @keyframes blink{50%{opacity:0;}}
   #overlay.hidden{display:none;}
-  #touchpad{position:fixed;bottom:60px;left:50%;transform:translateX(-50%);width:100%;max-width:480px;display:flex;justify-content:space-between;align-items:flex-end;padding:8px 16px 0;z-index:30;pointer-events:none;}
+  #touchpad{position:fixed;bottom:60px;left:50%;transform:translateX(-50%);width:100%;max-width:480px;display:none;justify-content:space-between;align-items:flex-end;padding:8px 16px 0;z-index:30;pointer-events:none;}
   .tchbtn{font-size:24px;padding:14px 26px;background:#00ff8820;border:2px solid #00ff8877;color:#00ff88;border-radius:10px;cursor:pointer;user-select:none;-webkit-user-select:none;pointer-events:all;touch-action:none;}
   #tch-right-group{display:flex;gap:20px;}
+  /* Only show touch controls on touch-only devices (phones / tablets). */
+  @media (hover:none) and (pointer:coarse){#touchpad{display:flex;}}
 </style>
 </head>
 <body>
@@ -146,11 +157,33 @@ function resizeGame(){
   canvas.style.width=cw+'px'; canvas.style.height=ch+'px';
   uiEl.style.width=cw+'px'; msgEl.style.width=cw+'px';
   W=cw; H=ch; TILE=Math.round(H/13);
-  // Reserve bottom portion for touch controls so floor sits above them on mobile
-  FLOOR_OFFSET = (availW<=600) ? Math.round(ch*0.22) : 0;
+  // Reserve bottom portion for touch controls so the floor sits above them.
+  // Use the same (hover:none)+(pointer:coarse) check as the touchpad CSS so the
+  // floor only rises when the touch buttons are actually visible.
+  const hasTouch = window.matchMedia('(hover:none) and (pointer:coarse)').matches;
+  FLOOR_OFFSET = hasTouch ? Math.round(ch*0.22) : 0;
 }
 resizeGame();
-window.addEventListener('resize',()=>{resizeGame();});
+// Debounce resize so a window drag doesn't thrash. If the game is mid-zone,
+// regenerate the level at the new dimensions — the level data is laid out in
+// absolute pixels using the old W/H/TILE values, so changing the canvas size
+// without regenerating leaves platforms, devices and enemies floating at the
+// wrong positions. Player score/level/HP are preserved.
+let resizeTimer=null;
+window.addEventListener('resize',()=>{
+  clearTimeout(resizeTimer);
+  resizeTimer=setTimeout(()=>{
+    const wasRunning=gameRunning;
+    resizeGame();
+    if(wasRunning && ld && !zDone && !pl.dead){
+      const savedHp=pl.hp, savedCoffee=pl.coffeeTimer;
+      initLevel();
+      pl.hp=savedHp; pl.coffeeTimer=savedCoffee;
+      updateHpUI();
+      setMsg('🔄 Display resized — zone restarted');
+    }
+  },150);
+});
 
 // ═══ CONSTANTS ════════════════════════════════════════════════
 // Physics are scaled relative to a 400px-tall reference canvas so
@@ -621,7 +654,7 @@ function updatePlayer(){
   resolveP(pl);
   if(!wog&&pl.onGround)SFX.land();
   pl.x=Math.max(0,Math.min(pl.x,ld.width-pl.w));
-  if(pl.y>H+50){takeDmg(1);pl.y=H-TILE-pl.h;pl.vy=0;}
+  if(pl.y>H+50){takeDmg(1);pl.y=(H-FLOOR_OFFSET)-TILE-pl.h;pl.vy=0;}
   if(Math.abs(pl.vx)>0.5){pl.walkTimer++;if(pl.walkTimer>8){pl.walkFrame=(pl.walkFrame+1)%4;pl.walkTimer=0;}}
   else pl.walkFrame=0;
   const tc=pl.x-W/2+pl.w/2; cam.x+=(tc-cam.x)*0.12;
