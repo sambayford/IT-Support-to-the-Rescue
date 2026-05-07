@@ -902,8 +902,8 @@ function renderHS(){
   const el=document.getElementById('hstable');
   if(!highScores.length){el.innerHTML='';return;}
   let h='<div style="color:#ffdd00;font-size:11px;margin-top:6px">— HIGH SCORES —</div>';
-  highScores.slice(0,5).forEach((s,i)=>{
-    const m=['🥇','🥈','🥉','4️⃣','5️⃣'][i];
+  highScores.slice(0,3).forEach((s,i)=>{
+    const m=['🥇','🥈','🥉'][i];
     h+=`<div>${m} ${String(s.score).padStart(6,' ')} pts &nbsp; Hallway ${s.level}</div>`;
   });
   el.innerHTML=h;
