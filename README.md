@@ -25,7 +25,7 @@ step, no dependencies (just a Google Fonts CDN).
 - 👟 Jump on enemies' heads to stomp them. Touching them any other way costs
   HP.
 - ☕ Coffee gives you 5 seconds of turbo speed and faster fixes.
-- 💾 USB drives, 🔌 Ethernet cables and 📘 manuals are score pickups.
+- 💾 floppy disks, 🔌 ethernet cables and 📘 manuals are score pickups.
 - 🍩 Donuts heal 1 HP.
 - ⚠️ Every 10th zone is a **boss zone** — face the Headteacher.
 
@@ -46,8 +46,7 @@ python3 -m http.server 8000
 
 ## Browser support
 
-Tested in current Safari (macOS / iOS). Should also work in Chrome, Firefox
-and Edge — uses standard Canvas 2D and Web Audio APIs.
+Any chromium based browser or Safari. Tested in Chrome, Edge, Brave, Safari (macOS / iOS). Uses standard Canvas 2D and Web Audio APIs.
 
 ## Licence
 
