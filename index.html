@@ -176,6 +176,7 @@ let zDone=false,zFinal=false;
 let boss=null;
 let highScores=[];
 let zoneFrames=0;   // frames elapsed this zone
+let totalFrames=0;  // frames accumulated across all hallways this run
 let timeBonus=0;    // time bonus awarded at end
 try{highScores=JSON.parse(localStorage.getItem('itguy_hs')||'[]');}catch(e){}
 
@@ -597,6 +598,7 @@ function initLevel(){
   pl.vx=0;pl.vy=0;pl.fixing=false;pl.fixTarget=null;pl.dead=false;pl.coffeeTimer=0;
   cam.x=0; parts=[];ftxts=[];invT=0;shake=0;
   zDone=false;zFinal=false;boss=null;
+  totalFrames+=zoneFrames; // carry forward time from completed hallways
   zoneFrames=0; timeBonus=0;
   if(ld.isBoss){spawnBoss();SFX.boss();setMsg('⚡ BOSS ZONE! Stomp the Headteacher!');}
   else setMsg('Hallway '+level+' — Fix all '+tTotal+' devices!');
@@ -892,8 +894,12 @@ function handleContinue(){
 }
 
 // ═══ HIGH SCORES ═════════════════════════════════════════════
+function formatTime(frames){
+  const s=Math.floor(frames/60);
+  return Math.floor(s/60)+':'+String(s%60).padStart(2,'0');
+}
 function saveScore(){
-  highScores.push({score,level});
+  highScores.push({score,level,totalFrames:totalFrames+zoneFrames});
   highScores.sort((a,b)=>b.score-a.score);
   highScores=highScores.slice(0,8);
   try{localStorage.setItem('itguy_hs',JSON.stringify(highScores));}catch(e){}
@@ -904,7 +910,8 @@ function renderHS(){
   let h='<div style="color:#ffdd00;font-size:11px;margin-top:6px">— HIGH SCORES —</div>';
   highScores.slice(0,3).forEach((s,i)=>{
     const m=['🥇','🥈','🥉'][i];
-    h+=`<div>${m} ${String(s.score).padStart(6,' ')} pts &nbsp; Hallway ${s.level}</div>`;
+    const t=s.totalFrames!=null?formatTime(s.totalFrames):'--:--';
+    h+=`<div>${m} ${String(s.score).padStart(6,' ')} pts &nbsp; H${s.level} &nbsp; ⏱${t}</div>`;
   });
   el.innerHTML=h;
 }
@@ -1412,7 +1419,7 @@ function loop(){
 function showDeathScreen(){
   const ov=document.getElementById('overlay');
   ov.querySelector('h1').textContent='💀 SYSTEM CRASH';
-  ov.querySelector('p').innerHTML='Score: '+score+'<br>Hallway reached: '+level+'<br><br>Your IT ticket queue is overflowing.';
+  ov.querySelector('p').innerHTML='Score: '+score+'<br>Hallway reached: '+level+'<br>Total time: '+formatTime(totalFrames+zoneFrames)+'<br><br>Your IT ticket queue is overflowing.';
   document.getElementById('startbtn').textContent='↺ REBOOT';
   renderHS();ov.classList.remove('hidden');
 }
@@ -1428,7 +1435,7 @@ function showMainMenu(){
 document.addEventListener('keydown',e=>{
   keys[e.code]=true;
   if(['Space','ArrowUp','ArrowDown','ArrowLeft','ArrowRight'].includes(e.code))e.preventDefault();
-  if(e.code==='KeyR'&&!gameRunning&&pl.dead){level=1;score=0;pl.hp=MAX_HP;pl.dead=false;startGame();}
+  if(e.code==='KeyR'&&!gameRunning&&pl.dead){level=1;score=0;totalFrames=0;zoneFrames=0;pl.hp=MAX_HP;pl.dead=false;startGame();}
   if((e.code==='Space'||e.code==='Enter')&&zDone)handleContinue();
 });
 document.addEventListener('keyup',e=>{keys[e.code]=false;});
@@ -1442,7 +1449,7 @@ function startGame(){
 
 document.getElementById('startbtn').addEventListener('click',()=>{
   try{gac().resume();}catch(e){}
-  if(document.getElementById('startbtn').textContent.includes('REBOOT')){level=1;score=0;}
+  if(document.getElementById('startbtn').textContent.includes('REBOOT')){level=1;score=0;totalFrames=0;zoneFrames=0;}
   pl.hp=MAX_HP;pl.dead=false;startGame();
 });
 
