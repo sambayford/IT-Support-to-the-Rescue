@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
-<title>IT'S A GAME</title>
+<title>IT'S A GAME!</title>
 <style>
   @import url('https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap');
   *{margin:0;padding:0;box-sizing:border-box;}
@@ -50,7 +50,7 @@
 </div>
 
 <div id="overlay">
-  <h1>💻 IT'S A GAME</h1>
+  <h1>💻 IT'S A GAME!</h1>
   <p>Students keep unplugging things, opening phishing emails and using the router as a footrest.<br><br>
   🔧 Walk into broken devices to fix them<br>
   👟 Jump ON enemies to stomp them<br>
@@ -216,24 +216,11 @@ function genLevel(lvl){
   // Ground
   for(let x=0;x<lw;x+=TILE) platforms.push({x,y:EH-TILE,w:TILE,h:TILE,ground:true});
 
-  // Floating platforms — heights are tied to decorations:
-  //   LOW  = top of lockers (player stands on locker tops)
-  //   MID  = bottom of windows (window sill acts as platform)
-  //   HIGH = bottom of fluorescent ceiling light fitting
+  // Floating platforms
   const PLAT_H = Math.max(3, Math.round(TILE * 0.25));
-
-  // Decoration heights (must match values set later in dec section)
-  const LOCKER_H_VAL = Math.round(TILE * 1.4);
-  const LOCKER_Y_VAL = EH - TILE - LOCKER_H_VAL;
-  const WIN_H_VAL    = (LOCKER_H_VAL) / 2;     // DOOR_H/2 = LOCKER_H/2
-  const WIN_Y_VAL    = LOCKER_Y_VAL;            // windows top-aligned with lockers
-  const LIGHT_H      = Math.round(TILE * 0.35); // fluorescent fitting height
-  const LIGHT_CHAIN  = Math.round(TILE * 0.8);  // chain length from ceiling
-
-  const LOW  = LOCKER_Y_VAL;                        // stand on top of lockers
-  const MID  = WIN_Y_VAL + WIN_H_VAL;               // stand on window sill bottom
-  const HIGH = LIGHT_CHAIN + LIGHT_H;               // stand under ceiling light
-
+  const LOW  = EH - TILE - Math.round(54*(H/REF_H));
+  const MID  = LOW  - Math.round(TILE*1.8);
+  const HIGH = LOW  - Math.round(TILE*3.4);
   const MAX_GAP = Math.round(80*(H/REF_H));
 
   // Deterministic PRNG seeded by level
@@ -242,41 +229,35 @@ function genLevel(lvl){
 
   const pcs = [];
   const tiers = [LOW, MID, HIGH];
-  const tierNames = ['low','mid','high'];
+  // Always start at LOW and close to player so zone is immediately accessible
   let prevH = LOW;
   let prevRightEdge = W*0.08;
+
   const targetCount = 18 + lvl * 2;
 
-  // Force first platform at LOW, close to start
+  // Force first platform very close to start at LOW height so it's always reachable
   const firstW = TILE * (2 + Math.floor(rng() * 3));
-  pcs.push({x: prevRightEdge + Math.round(MAX_GAP * 0.3), y: LOW, w: firstW, tier:'low'});
+  pcs.push({x: prevRightEdge + Math.round(MAX_GAP * 0.3), y: LOW, w: firstW});
   prevRightEdge = pcs[0].x + firstW;
 
   while(pcs.length < targetCount){
-    const gapFraction = 0.25 + rng() * 0.65;
+    const gapFraction = 0.25 + rng() * 0.65; // 25–90% of MAX_GAP
     const gap  = Math.round(gapFraction * MAX_GAP);
     const px   = prevRightEdge + gap;
     if(px >= lw - 200) break;
+
+    // Height: one tier up, same, or one tier down
     const prevIdx = tiers.indexOf(prevH) === -1 ? 0 : tiers.indexOf(prevH);
     const minIdx  = Math.max(0, prevIdx - 1);
     const maxIdx  = Math.min(tiers.length - 1, prevIdx + 1);
-    const tierIdx = minIdx + Math.floor(rng() * (maxIdx - minIdx + 1));
-    const py = tiers[tierIdx];
+    const py = tiers[minIdx + Math.floor(rng() * (maxIdx - minIdx + 1))];
     prevH = py;
+
     const pw = TILE * (2 + Math.floor(rng() * 4));
-    pcs.push({x:px, y:py, w:pw, tier:tierNames[tierIdx]});
+    pcs.push({x:px, y:py, w:pw});
     prevRightEdge = px + pw;
   }
-  pcs.forEach(p=>{if(p.x<lw-200)platforms.push({x:p.x,y:p.y,w:p.w,h:PLAT_H,ground:false,tier:p.tier});});
-
-  // Also store platform list for decoration-as-platform drawing
-  const platDecs = pcs.filter(p=>p.x<lw-200).map(p=>({
-    type: p.tier==='low'  ? 'platLocker'  :
-          p.tier==='mid'  ? 'platWindow'  : 'platLight',
-    x:p.x, y:p.y, w:p.w, h:PLAT_H,
-    lightH:LIGHT_H, lightChain:LIGHT_CHAIN,
-  }));
-  platDecs.forEach(d=>decs.push(d));
+  pcs.forEach(p=>{if(p.x<lw-200)platforms.push({x:p.x,y:p.y,w:p.w,h:PLAT_H,ground:false});});
 
   if(!isBoss){
     const dt=['printer','pc','router','projector','phone'];
@@ -906,8 +887,12 @@ function drawPlats(){
       ctx.fillStyle='#2d2d44';ctx.fillRect(sx,p.y,p.w,5);
       ctx.strokeStyle='#25253a';ctx.lineWidth=1;
       for(let tx=sx;tx<sx+p.w;tx+=TILE){ctx.beginPath();ctx.moveTo(tx,p.y);ctx.lineTo(tx,p.y+p.h);ctx.stroke();}
+    } else {
+      // Plain grey thin floor
+      ctx.fillStyle='#3a3a50';ctx.fillRect(sx,p.y,p.w,p.h);
+      ctx.fillStyle='#5a5a70';ctx.fillRect(sx,p.y,p.w,Math.max(1,Math.round(p.h*0.4)));
+      ctx.fillStyle='#2a2a40';ctx.fillRect(sx,p.y+p.h-Math.max(1,Math.round(p.h*0.25)),p.w,Math.max(1,Math.round(p.h*0.25)));
     }
-    // Floating platforms are drawn as decorations (locker tops, window sills, ceiling lights)
   }
 }
 
@@ -918,89 +903,7 @@ function drawDecs(){
     if(sx+d.w<-4||sx>W+4)continue;
     const x=sx,y=d.y,w=d.w,h=d.h;
 
-    // ── Platform-as-decoration types ──────────────────────────
-
-    if(d.type==='platLocker'){
-      // Bank of lockers — player stands on top
-      const lw2=Math.round(w/3); // width of each locker in the bank
-      for(let k=0;k<3&&k*lw2<w;k++){
-        const lx=x+k*lw2;
-        const lh=Math.round(TILE*1.4);
-        const ly=y; // y = top of locker = standing surface
-        const groundY=ly+lh;
-        ctx.fillStyle='#2a3a5a';ctx.fillRect(lx,ly,lw2,lh);
-        ctx.strokeStyle='#3a4a6a';ctx.lineWidth=1;
-        ctx.strokeRect(lx,ly,lw2,lh);
-        // Two compartment doors
-        ctx.strokeRect(lx+2,ly+2,lw2-4,lh/2-3);
-        ctx.strokeRect(lx+2,ly+lh/2+1,lw2-4,lh/2-3);
-        // Handles
-        ctx.fillStyle='#aabbcc';
-        ctx.fillRect(lx+lw2/2-2,ly+lh/4-3,4,6);
-        ctx.fillRect(lx+lw2/2-2,ly+3*lh/4-3,4,6);
-        // Vent slits
-        ctx.fillStyle='#1a2a4a';
-        for(let s=0;s<3;s++) ctx.fillRect(lx+4,ly+5+s*3,lw2-8,1);
-      }
-      // Top surface highlight so player can see the standing surface
-      ctx.fillStyle='#4a5a7a';ctx.fillRect(x,y,w,3);
-    }
-
-    else if(d.type==='platWindow'){
-      // Window — player stands on the sill (bottom edge of frame)
-      // Draw window frame above the sill
-      const winH=Math.round(TILE*1.4)/2; // WIN_H = LOCKER_H/2
-      const winY=y-winH; // window body is above the platform y
-      // Outer frame
-      ctx.fillStyle='#1a1a28';ctx.fillRect(x,winY,w,winH);
-      // Glass panes (2×2 grid)
-      const gpw=w/2-5,gph=winH/2-5;
-      [[x+3,winY+3],[x+w/2+2,winY+3],[x+3,winY+winH/2+2],[x+w/2+2,winY+winH/2+2]].forEach(([gx2,gy2])=>{
-        ctx.fillStyle='#1a2a3a';ctx.fillRect(gx2,gy2,gpw,gph);
-        ctx.fillStyle='rgba(68,136,255,0.2)';ctx.fillRect(gx2,gy2,gpw,gph);
-      });
-      ctx.fillStyle='#2a3a4a';
-      ctx.fillRect(x+w/2-2,winY+2,4,winH-4);
-      ctx.fillRect(x+2,winY+winH/2-2,w-4,4);
-      ctx.strokeStyle='#3a4a6a';ctx.lineWidth=2;ctx.strokeRect(x,winY,w,winH);
-      // Sill (standing surface)
-      ctx.fillStyle='#5a5a70';ctx.fillRect(x-3,y,w+6,5);
-      ctx.fillStyle='#4a4a60';ctx.fillRect(x-3,y+3,w+6,2);
-    }
-
-    else if(d.type==='platLight'){
-      // Fluorescent ceiling light — player stands on the fitting bottom
-      const chain=d.lightChain||Math.round(TILE*0.8);
-      const fitH=d.lightH||Math.round(TILE*0.35);
-      const fitY=y-fitH; // fitting body above the platform surface
-      const flickerOn=Math.sin(now/300+d.x*0.01)>-0.95; // occasionally flickers
-
-      // Chains from ceiling (y=0) to fitting
-      const nChains=Math.max(2,Math.round(w/(TILE*1.5)));
-      ctx.fillStyle='#555566';
-      for(let c=0;c<nChains;c++){
-        const cx2=x+w*(c+0.5)/nChains;
-        ctx.fillRect(cx2-1,0,2,fitY);
-      }
-      // Fitting housing
-      ctx.fillStyle='#aaaacc';ctx.fillRect(x,fitY,w,fitH);
-      ctx.fillStyle='#888899';ctx.fillRect(x,fitY,w,Math.round(fitH*0.3));
-      // Tube glow
-      if(flickerOn){
-        ctx.fillStyle='rgba(220,240,255,0.9)';ctx.fillRect(x+3,fitY+Math.round(fitH*0.35),w-6,Math.round(fitH*0.55));
-        // Glow halo beneath the light
-        const grad=ctx.createLinearGradient(0,y,0,y+TILE*2);
-        grad.addColorStop(0,'rgba(200,230,255,0.18)');
-        grad.addColorStop(1,'rgba(200,230,255,0)');
-        ctx.fillStyle=grad;ctx.fillRect(x-TILE,y,w+TILE*2,TILE*2);
-      } else {
-        ctx.fillStyle='#334455';ctx.fillRect(x+3,fitY+Math.round(fitH*0.35),w-6,Math.round(fitH*0.55));
-      }
-      // End caps
-      ctx.fillStyle='#666677';ctx.fillRect(x,fitY,4,fitH);ctx.fillRect(x+w-4,fitY,4,fitH);
-      // Bottom edge = standing surface
-      ctx.fillStyle='#ccccdd';ctx.fillRect(x,y,w,3);
-    }
+    if(d.type==='locker'){
       // Metal locker body
       ctx.fillStyle='#2a3a5a';ctx.fillRect(x,y,w,h);
       ctx.strokeStyle='#3a4a6a';ctx.lineWidth=1;
@@ -1333,7 +1236,7 @@ function drawPlayer(){
   if(pl.coffeeTimer>0){ctx.shadowColor='#ff8800';ctx.shadowBlur=12;}
   if(pl.facing===-1){ctx.translate(sx+pl.w,pl.y);ctx.scale(-1,1);}
   else ctx.translate(sx,pl.y);
-  drawBody(pl.w,pl.h,bob,leg,{shirt:'#2255cc',pants:'#333355',shoes:'#111',shoeStripe:null,hair:'#3a2a10',hairStyle:0,eye:'#223388',glasses:true,lanyard:true,bag:false,phone:false,papers:false,fixing:pl.fixing,coffeeGlow:pl.coffeeTimer>0});
+  drawBody(pl.w,pl.h,bob,leg,{shirt:'#2255cc',pants:'#333355',shoes:'#111',shoeStripe:null,hair:'#3a2a10',hairStyle:0,eye:'#223388',glasses:true,lanyard:true,bag:true,phone:false,papers:false,fixing:pl.fixing,coffeeGlow:pl.coffeeTimer>0});
   ctx.shadowBlur=0;ctx.restore();
 }
 
