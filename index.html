@@ -42,7 +42,7 @@
     <div style="display:flex;align-items:center;gap:3px"><span>TICKETS:</span><div id="ticket-icons"></div></div>
     <div id="hpwrap"><span>HP:</span><div id="hpbar"><div id="hpfill" style="width:100%"></div></div></div>
     <span id="scoreel">SCORE: 0</span>
-    <span id="levelel">ZONE: 1</span>
+    <span id="levelel">HALLWAY: 1</span>
     <button id="mutebtn">🔊</button>
   </div>
   <canvas id="gamecanvas"></canvas>
@@ -55,7 +55,7 @@
   🔧 Walk into broken devices to fix them<br>
   👟 Jump ON enemies to stomp them<br>
   ☕ Grab coffee, USB drives &amp; donuts<br>
-  ⚠️ Every 10th zone: Face THE HEADTEACHER!<br><br>
+  ⚠️ Every 10th hallway: Face THE HEADTEACHER!<br><br>
   Arrow Keys / WASD — Move &amp; Jump (Space)</p>
   <button id="startbtn">▶ START YOUR SHIFT</button>
   <div id="hstable"></div>
@@ -599,7 +599,7 @@ function initLevel(){
   zDone=false;zFinal=false;boss=null;
   zoneFrames=0; timeBonus=0;
   if(ld.isBoss){spawnBoss();SFX.boss();setMsg('⚡ BOSS ZONE! Stomp the Headteacher!');}
-  else setMsg('Zone '+level+' — Fix all '+tTotal+' devices!');
+  else setMsg('Hallway '+level+' — Fix all '+tTotal+' devices!');
   updateTickUI();updateUI();updateHpUI();
 }
 function updateTickUI(){
@@ -608,7 +608,7 @@ function updateTickUI(){
     const s=document.createElement('span');s.textContent=i<tLeft?'🔴':'✅';el.appendChild(s);
   }
 }
-function updateUI(){document.getElementById('scoreel').textContent='SCORE: '+score;document.getElementById('levelel').textContent='ZONE: '+level;}
+function updateUI(){document.getElementById('scoreel').textContent='SCORE: '+score;document.getElementById('levelel').textContent='HALLWAY: '+level;}
 function updateHpUI(){const f=document.getElementById('hpfill');f.style.width=(pl.hp/MAX_HP*100)+'%';f.style.background=pl.hp<=1?'#f84':'#f44';}
 function setMsg(m){document.getElementById('msg').textContent=m;}
 
@@ -843,7 +843,7 @@ function zoneDoneLoop(){
   if(zFinal){
     const l1='🏆 HEADTEACHER DEFEATED!';
     const l2='+2000 BONUS  SCORE: '+score;
-    const l3='NEXT: ZONE '+(level+1);
+    const l3='NEXT: HALLWAY '+(level+1);
     const l4='TAP OR SPACE TO CONTINUE';
     const s1=fitFont(l1,maxW,Math.round(H/16),8);
     const s2=fitFont(l2,maxW,Math.round(H/24),7);
@@ -858,10 +858,10 @@ function zoneDoneLoop(){
     const secsElapsed=Math.floor(zoneFrames/60);
     const mins=Math.floor(secsElapsed/60);
     const ss=String(secsElapsed%60).padStart(2,'0');
-    const l1='ZONE '+level+' COMPLETE!';
+    const l1='HALLWAY '+level+' COMPLETE!';
     const l2='TIME: '+mins+':'+ss+'  TIME BONUS: +'+timeBonus;
-    const l3='+500 ZONE BONUS  SCORE: '+score;
-    const l4=nx%10===0?'NEXT: ⚠️ BOSS ZONE '+nx+'!':'NEXT: ZONE '+nx;
+    const l3='+500 HALLWAY BONUS  SCORE: '+score;
+    const l4=nx%10===0?'NEXT: ⚠️ BOSS HALLWAY '+nx+'!':'NEXT: HALLWAY '+nx;
     const l5=nx%10===0?'THE HEADTEACHER AWAITS...':'';
     const l6='TAP OR SPACE TO CONTINUE';
     const s1=fitFont(l1,maxW,Math.round(H/14),8);
@@ -904,7 +904,7 @@ function renderHS(){
   let h='<div style="color:#ffdd00;font-size:11px;margin-top:6px">— HIGH SCORES —</div>';
   highScores.slice(0,5).forEach((s,i)=>{
     const m=['🥇','🥈','🥉','4️⃣','5️⃣'][i];
-    h+=`<div>${m} ${String(s.score).padStart(6,' ')} pts &nbsp; Zone ${s.level}</div>`;
+    h+=`<div>${m} ${String(s.score).padStart(6,' ')} pts &nbsp; Hallway ${s.level}</div>`;
   });
   el.innerHTML=h;
 }
@@ -1412,14 +1412,14 @@ function loop(){
 function showDeathScreen(){
   const ov=document.getElementById('overlay');
   ov.querySelector('h1').textContent='💀 SYSTEM CRASH';
-  ov.querySelector('p').innerHTML='Score: '+score+'<br>Zone reached: '+level+'<br><br>Your IT ticket queue is overflowing.';
+  ov.querySelector('p').innerHTML='Score: '+score+'<br>Hallway reached: '+level+'<br><br>Your IT ticket queue is overflowing.';
   document.getElementById('startbtn').textContent='↺ REBOOT';
   renderHS();ov.classList.remove('hidden');
 }
 function showMainMenu(){
   const ov=document.getElementById('overlay');
   ov.querySelector('h1').innerHTML='💻 IT SUPPORT<br>TO THE RESCUE!';
-  ov.querySelector('p').innerHTML='Students keep unplugging things, opening phishing emails and using the router as a footrest.<br><br>🔧 Walk into broken devices to fix them<br>👟 Jump ON enemies to stomp them<br>☕ Grab coffee, USB drives &amp; donuts<br>⚠️ Every 10th zone: Face THE HEADTEACHER!<br><br>Arrow Keys / WASD — Move &amp; Jump (Space)';
+  ov.querySelector('p').innerHTML='Students keep unplugging things, opening phishing emails and using the router as a footrest.<br><br>🔧 Walk into broken devices to fix them<br>👟 Jump ON enemies to stomp them<br>☕ Grab coffee, USB drives &amp; donuts<br>⚠️ Every 10th hallway: Face THE HEADTEACHER!<br><br>Arrow Keys / WASD — Move &amp; Jump (Space)';
   document.getElementById('startbtn').textContent='▶ START SHIFT';
   renderHS();ov.classList.remove('hidden');
 }
