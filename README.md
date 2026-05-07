@@ -1,4 +1,4 @@
-# 💻 IT'S A GAME!
+# 💻 IT'S A GAME
 
 A pixel-art platformer where you fix devices, stomp enemies and survive the
 school IT support shift from hell. Single-file HTML5 canvas game — no build
