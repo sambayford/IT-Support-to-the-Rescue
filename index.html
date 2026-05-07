@@ -216,11 +216,32 @@ function genLevel(lvl){
   // Ground
   for(let x=0;x<lw;x+=TILE) platforms.push({x,y:EH-TILE,w:TILE,h:TILE,ground:true});
 
-  // Floating platforms
-  const PLAT_H = Math.max(3, Math.round(TILE * 0.25));
-  const LOW  = EH - TILE - Math.round(54*(H/REF_H));
-  const MID  = LOW  - Math.round(TILE*1.8);
-  const HIGH = LOW  - Math.round(TILE*3.4);
+  // Floating platforms — heights are tied to decorations:
+  //   LOW  = top of lockers (player stands on locker tops)
+  //   MID  = bottom of windows — exactly one jump above LOW
+  //   HIGH = bottom of ceiling light — exactly one jump above MID
+  //
+  // Max rise at REF_H=400: JUMP²/(2*GRAVITY) = 8.125²/1.1 ≈ 60px
+  // Step = 52px (scaled) — needs a near-full jump, feels rewarding
+  const PLAT_H  = Math.max(4, Math.round(TILE * 0.3)); // visible platform thickness
+  const JUMP_STEP = Math.round(52 * (H / REF_H));
+
+  const LOCKER_H_VAL = Math.round(TILE * 1.4);
+  const LOCKER_Y_VAL = EH - TILE - LOCKER_H_VAL;
+
+  const LOW  = LOCKER_Y_VAL;        // platform y = top of locker body = standing surface
+  const MID  = LOW  - JUMP_STEP;    // one jump above LOW — window sill
+  const HIGH = MID  - JUMP_STEP;    // one jump above MID — top of ceiling light fitting
+
+  // Window: body hangs from MID upward
+  const WIN_H_VAL = Math.round(LOCKER_H_VAL * 0.6);
+  const WIN_Y_VAL = MID - WIN_H_VAL; // top of window frame
+
+  // Fluorescent light: fitting TOP = HIGH (player stands here), chain below fitting
+  const LIGHT_H     = Math.round(TILE * 0.35);
+  const LIGHT_BOTTOM = HIGH + LIGHT_H; // bottom of fitting = HIGH + fitting height
+  const LIGHT_CHAIN  = HIGH;           // chain runs from y=0 down to HIGH (fitting top)
+
   const MAX_GAP = Math.round(80*(H/REF_H));
 
   // Deterministic PRNG seeded by level
@@ -229,35 +250,49 @@ function genLevel(lvl){
 
   const pcs = [];
   const tiers = [LOW, MID, HIGH];
-  // Always start at LOW and close to player so zone is immediately accessible
+  const tierNames = ['low','mid','high'];
   let prevH = LOW;
   let prevRightEdge = W*0.08;
-
   const targetCount = 18 + lvl * 2;
 
-  // Force first platform very close to start at LOW height so it's always reachable
+  // Force first platform at LOW, close to start
   const firstW = TILE * (2 + Math.floor(rng() * 3));
-  pcs.push({x: prevRightEdge + Math.round(MAX_GAP * 0.3), y: LOW, w: firstW});
+  pcs.push({x: prevRightEdge + Math.round(MAX_GAP * 0.3), y: LOW, w: firstW, tier:'low'});
   prevRightEdge = pcs[0].x + firstW;
 
   while(pcs.length < targetCount){
-    const gapFraction = 0.25 + rng() * 0.65; // 25–90% of MAX_GAP
+    const gapFraction = 0.25 + rng() * 0.65;
     const gap  = Math.round(gapFraction * MAX_GAP);
     const px   = prevRightEdge + gap;
     if(px >= lw - 200) break;
-
-    // Height: one tier up, same, or one tier down
     const prevIdx = tiers.indexOf(prevH) === -1 ? 0 : tiers.indexOf(prevH);
     const minIdx  = Math.max(0, prevIdx - 1);
     const maxIdx  = Math.min(tiers.length - 1, prevIdx + 1);
-    const py = tiers[minIdx + Math.floor(rng() * (maxIdx - minIdx + 1))];
+    const tierIdx = minIdx + Math.floor(rng() * (maxIdx - minIdx + 1));
+    const py = tiers[tierIdx];
     prevH = py;
-
     const pw = TILE * (2 + Math.floor(rng() * 4));
-    pcs.push({x:px, y:py, w:pw});
+    pcs.push({x:px, y:py, w:pw, tier:tierNames[tierIdx]});
     prevRightEdge = px + pw;
   }
-  pcs.forEach(p=>{if(p.x<lw-200)platforms.push({x:p.x,y:p.y,w:p.w,h:PLAT_H,ground:false});});
+  pcs.forEach(p=>{
+    if(p.x>=lw-200) return;
+    // Each tier has a different platform thickness matching its visual
+    const ph = p.tier==='low' ? LOCKER_H_VAL :   // full locker height so top = full surface
+                p.tier==='mid' ? PLAT_H :          // thin sill
+                PLAT_H;                             // thin light top
+    platforms.push({x:p.x, y:p.y, w:p.w, h:ph, ground:false, tier:p.tier});
+  });
+
+  const platDecs = pcs.filter(p=>p.x<lw-200).map(p=>({
+    type: p.tier==='low'  ? 'platLocker' :
+          p.tier==='mid'  ? 'platWindow' : 'platLight',
+    x:p.x, y:p.y, w:p.w,
+    h: p.tier==='low' ? LOCKER_H_VAL : PLAT_H,
+    winH:WIN_H_VAL, winY:WIN_Y_VAL,
+    lightH:LIGHT_H, lightBottom:LIGHT_BOTTOM, lightChain:LIGHT_CHAIN,
+  }));
+  platDecs.forEach(d=>decs.push(d));
 
   if(!isBoss){
     const dt=['printer','pc','router','projector','phone'];
@@ -392,13 +427,8 @@ function genLevel(lvl){
   let safetyLimit = 10000; // prevent infinite loop
 
   while(wx < lw - TILE * 2 && --safetyLimit > 0){
-    // ── 3 lockers — placed directly so they touch, no gap check between them ──
-    for(let k = 0; k < 3; k++){
-      const lx2 = wx + k * LOCKER_W;
-      if(lx2 + LOCKER_W < lw - 100)
-        decs.push({type:'locker', x:lx2, y:LOCKER_Y, w:LOCKER_W, h:LOCKER_H});
-    }
-    wx += BANK_W;
+    // Lockers and windows are no longer placed in the wall cycle —
+    // they only appear as platform decorations (platLocker, platWindow).
 
     // ── door + clock above it ──────────────────────────────────
     if(wx + DOOR_W < lw - 100){
@@ -408,15 +438,10 @@ function genLevel(lvl){
     }
     wx += DOOR_SEG;
 
-    // ── window (same height as doors) ──────────────────────────
-    if(wx + WIN_W < lw - 100)
-      tryDec({type:'window', x:wx, y:WIN_Y, w:WIN_W, h:WIN_H});
-    wx += WIN_SEG;
-
     // ── noticeboard ────────────────────────────────────────────
     if(wx + BOARD_W < lw - 100)
       tryDec({type:'noticeboard', x:wx, y:BOARD_Y, w:BOARD_W, h:BOARD_H, seed:boardSeed++});
-    wx += BOARD_SEG;
+    wx += BOARD_SEG + BANK_W + WIN_SEG; // skip the space that was lockers + window
   }
 
   if(CYCLE_W > 0){
@@ -887,12 +912,8 @@ function drawPlats(){
       ctx.fillStyle='#2d2d44';ctx.fillRect(sx,p.y,p.w,5);
       ctx.strokeStyle='#25253a';ctx.lineWidth=1;
       for(let tx=sx;tx<sx+p.w;tx+=TILE){ctx.beginPath();ctx.moveTo(tx,p.y);ctx.lineTo(tx,p.y+p.h);ctx.stroke();}
-    } else {
-      // Plain grey thin floor
-      ctx.fillStyle='#3a3a50';ctx.fillRect(sx,p.y,p.w,p.h);
-      ctx.fillStyle='#5a5a70';ctx.fillRect(sx,p.y,p.w,Math.max(1,Math.round(p.h*0.4)));
-      ctx.fillStyle='#2a2a40';ctx.fillRect(sx,p.y+p.h-Math.max(1,Math.round(p.h*0.25)),p.w,Math.max(1,Math.round(p.h*0.25)));
     }
+    // Floating platforms are drawn as decorations (locker tops, window sills, ceiling lights)
   }
 }
 
@@ -903,7 +924,84 @@ function drawDecs(){
     if(sx+d.w<-4||sx>W+4)continue;
     const x=sx,y=d.y,w=d.w,h=d.h;
 
-    if(d.type==='locker'){
+    // ── Platform-as-decoration types ──────────────────────────
+
+    if(d.type==='platLocker'){
+      // y = top of locker = standing surface. Body extends downward by LOCKER_H_VAL.
+      const lh=d.h; // full locker height stored in d.h
+      const lw2=Math.max(1, Math.round(w/3));
+      for(let k=0;k<3;k++){
+        const lx=x+k*lw2;
+        const lw3=k<2?lw2:w-lw2*2; // last locker takes any rounding remainder
+        ctx.fillStyle='#2a3a5a';ctx.fillRect(lx,y,lw3,lh);
+        ctx.strokeStyle='#3a4a6a';ctx.lineWidth=1;
+        ctx.strokeRect(lx,y,lw3,lh);
+        ctx.strokeRect(lx+2,y+2,lw3-4,lh/2-3);
+        ctx.strokeRect(lx+2,y+lh/2+1,lw3-4,lh/2-3);
+        ctx.fillStyle='#aabbcc';
+        ctx.fillRect(lx+lw3/2-2,y+lh/4-3,4,6);
+        ctx.fillRect(lx+lw3/2-2,y+3*lh/4-3,4,6);
+        ctx.fillStyle='#1a2a4a';
+        for(let s=0;s<3;s++) ctx.fillRect(lx+4,y+5+s*3,lw3-8,1);
+      }
+      // Full-width top surface highlight
+      ctx.fillStyle='#4a5a7a';ctx.fillRect(x,y,w,3);
+    }
+
+    else if(d.type==='platWindow'){
+      // Window — player stands on the sill (bottom edge = platform y)
+      const winH=d.winH||Math.round(TILE*0.84);
+      const winY=d.winY||y-winH; // window body above the sill
+      // Outer frame
+      ctx.fillStyle='#1a1a28';ctx.fillRect(x,winY,w,winH);
+      // Glass panes (2×2 grid)
+      const gpw=w/2-5,gph=winH/2-5;
+      [[x+3,winY+3],[x+w/2+2,winY+3],[x+3,winY+winH/2+2],[x+w/2+2,winY+winH/2+2]].forEach(([gx2,gy2])=>{
+        ctx.fillStyle='#1a2a3a';ctx.fillRect(gx2,gy2,gpw,gph);
+        ctx.fillStyle='rgba(68,136,255,0.2)';ctx.fillRect(gx2,gy2,gpw,gph);
+      });
+      ctx.fillStyle='#2a3a4a';
+      ctx.fillRect(x+w/2-2,winY+2,4,winH-4);
+      ctx.fillRect(x+2,winY+winH/2-2,w-4,4);
+      ctx.strokeStyle='#3a4a6a';ctx.lineWidth=2;ctx.strokeRect(x,winY,w,winH);
+      // Sill (standing surface) at platform y
+      ctx.fillStyle='#5a5a70';ctx.fillRect(x-3,y,w+6,5);
+      ctx.fillStyle='#4a4a60';ctx.fillRect(x-3,y+3,w+6,2);
+    }
+
+    else if(d.type==='platLight'){
+      // y = TOP of fitting = standing surface. Fitting hangs below, chains below fitting.
+      const fitH=d.lightH||Math.round(TILE*0.35);
+      const fitBottom=y+fitH;
+      const flickerOn=Math.sin(now/300+d.x*0.01)>-0.95;
+
+      // Fitting housing (hanging below the platform top)
+      ctx.fillStyle='#aaaacc';ctx.fillRect(x,y,w,fitH);
+      ctx.fillStyle='#888899';ctx.fillRect(x,y,w,Math.round(fitH*0.3));
+      // Tube
+      if(flickerOn){
+        ctx.fillStyle='rgba(220,240,255,0.9)';ctx.fillRect(x+3,y+Math.round(fitH*0.35),w-6,Math.round(fitH*0.55));
+        const grad=ctx.createLinearGradient(0,fitBottom,0,fitBottom+TILE*3);
+        grad.addColorStop(0,'rgba(200,230,255,0.2)');
+        grad.addColorStop(1,'rgba(200,230,255,0)');
+        ctx.fillStyle=grad;ctx.fillRect(x-TILE,fitBottom,w+TILE*2,TILE*3);
+      } else {
+        ctx.fillStyle='#334455';ctx.fillRect(x+3,y+Math.round(fitH*0.35),w-6,Math.round(fitH*0.55));
+      }
+      // End caps
+      ctx.fillStyle='#666677';ctx.fillRect(x,y,4,fitH);ctx.fillRect(x+w-4,y,4,fitH);
+      // Chains from TOP of fitting up to ceiling (y=0)
+      const nChains=Math.max(2,Math.round(w/(TILE*1.5)));
+      ctx.fillStyle='#555566';
+      for(let c=0;c<nChains;c++){
+        const cx2=x+w*(c+0.5)/nChains;
+        ctx.fillRect(cx2-1,0,2,y); // from ceiling down to fitting top
+      }
+      // Top edge = standing surface
+      ctx.fillStyle='#ccccdd';ctx.fillRect(x,y,w,3);
+    }
+
+    else if(d.type==='locker'){
       // Metal locker body
       ctx.fillStyle='#2a3a5a';ctx.fillRect(x,y,w,h);
       ctx.strokeStyle='#3a4a6a';ctx.lineWidth=1;
@@ -1236,7 +1334,7 @@ function drawPlayer(){
   if(pl.coffeeTimer>0){ctx.shadowColor='#ff8800';ctx.shadowBlur=12;}
   if(pl.facing===-1){ctx.translate(sx+pl.w,pl.y);ctx.scale(-1,1);}
   else ctx.translate(sx,pl.y);
-  drawBody(pl.w,pl.h,bob,leg,{shirt:'#2255cc',pants:'#333355',shoes:'#111',shoeStripe:null,hair:'#3a2a10',hairStyle:0,eye:'#223388',glasses:true,lanyard:true,bag:true,phone:false,papers:false,fixing:pl.fixing,coffeeGlow:pl.coffeeTimer>0});
+  drawBody(pl.w,pl.h,bob,leg,{shirt:'#2255cc',pants:'#333355',shoes:'#111',shoeStripe:null,hair:'#3a2a10',hairStyle:0,eye:'#223388',glasses:true,lanyard:true,bag:false,phone:false,papers:false,fixing:pl.fixing,coffeeGlow:pl.coffeeTimer>0});
   ctx.shadowBlur=0;ctx.restore();
 }
 
