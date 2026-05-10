@@ -17,20 +17,22 @@
   #hpbar{width:80px;height:9px;background:#300;border:1px solid #f44;}
   #hpfill{height:100%;background:#f44;transition:width 0.2s;}
   #mutebtn{background:none;border:none;color:#00ff88;cursor:pointer;font-size:clamp(12px,2vw,16px);padding:0 2px;line-height:1;}
-  #gamecanvas{display:block;border:2px solid #00ff88;}
+  #gamecanvas{display:block;border:2px solid transparent;}
   #msg{width:100%;background:#111;border:2px solid #00ff88;border-top:none;
        color:#00ff88;font-size:clamp(7px,1.5vw,10px);padding:4px 10px;
        min-height:18px;max-height:40px;overflow:hidden;
        word-wrap:break-word;white-space:normal;line-height:1.5;letter-spacing:.2px;}
   #overlay{position:fixed;inset:0;display:flex;flex-direction:column;align-items:center;
-           justify-content:center;background:rgba(0,0,0,0.93);z-index:20;gap:12px;}
-  #overlay h1{font-size:clamp(14px,3vw,20px);color:#00ff88;text-shadow:0 0 20px #00ff88,3px 3px #005533;text-align:center;line-height:1.7;}
-  #overlay p{font-family:monospace;font-size:clamp(13px,2vw,17px);color:#aaffcc;text-align:center;max-width:600px;line-height:1.6;padding:0 12px;}
-  #overlay button{font-family:'Press Start 2P',monospace;font-size:10px;background:#00ff88;color:#000;border:none;padding:11px 26px;cursor:pointer;animation:blink 1s step-end infinite;}
+           justify-content:flex-start;background:rgba(0,0,0,0.93);z-index:20;gap:8px;
+           overflow-y:auto;padding:12px 12px 20px;}
+  #overlay h1{font-size:clamp(12px,2.5vw,18px);color:#00ff88;text-shadow:0 0 20px #00ff88,3px 3px #005533;text-align:center;line-height:1.5;margin-top:8px;}
+  #overlay p{font-family:monospace;font-size:clamp(11px,1.8vw,15px);color:#aaffcc;text-align:center;max-width:600px;line-height:1.6;padding:0 8px;}
+  #startbtn{font-family:'Press Start 2P',monospace;font-size:10px;background:#00ff88;color:#000;border:none;padding:10px 24px;cursor:pointer;animation:blink 1s step-end infinite;flex-shrink:0;}
+  #overlay button{cursor:pointer;}
   #hstable{font-family:monospace;font-size:14px;color:#aaffcc;text-align:center;line-height:1.7;}
   @keyframes blink{50%{opacity:0;}}
   #overlay.hidden{display:none;}
-  #touchpad{position:fixed;bottom:60px;left:50%;transform:translateX(-50%);width:100%;max-width:480px;display:flex;justify-content:space-between;align-items:flex-end;padding:8px 16px 0;z-index:30;pointer-events:none;}
+  #touchpad{position:fixed;bottom:60px;left:50%;transform:translateX(-50%);width:100%;max-width:480px;display:none;justify-content:space-between;align-items:flex-end;padding:8px 16px 0;z-index:30;pointer-events:none;}
   .tchbtn{font-size:24px;padding:14px 26px;background:#00ff8820;border:2px solid #00ff8877;color:#00ff88;border-radius:10px;cursor:pointer;user-select:none;-webkit-user-select:none;pointer-events:all;touch-action:none;}
   #tch-right-group{display:flex;gap:20px;}
 </style>
@@ -38,12 +40,13 @@
 <body>
 <div id="wrap">
   <div id="ui">
-    <span>💼 IT SUPPORT</span>
+    <span>💼 IT'S A GAME</span>
     <div style="display:flex;align-items:center;gap:3px"><span>TICKETS:</span><div id="ticket-icons"></div></div>
     <div id="hpwrap"><span>HP:</span><div id="hpbar"><div id="hpfill" style="width:100%"></div></div></div>
     <span id="scoreel">SCORE: 0</span>
     <span id="levelel">HALLWAY: 1</span>
     <button id="mutebtn">🔊</button>
+    <button id="pausebtn" style="background:none;border:none;color:#00ff88;cursor:pointer;font-size:clamp(12px,2vw,16px);padding:0 2px;line-height:1;">⏸</button>
   </div>
   <canvas id="gamecanvas"></canvas>
   <div id="msg">📷 Arrow Keys/WASD + SPACE — Fix devices, stomp enemies, grab collectibles!</div>
@@ -51,13 +54,35 @@
 
 <div id="overlay">
   <h1>💻 IT'S A GAME</h1>
-  <p>Students keep unplugging things, opening phishing emails and using the router as a footrest.<br><br>
+  <p>You are the school's lone IT technician. Broken printers, offline cameras, dead phones and crashed PCs are scattered across every hallway — and the students are making things worse.<br><br>
+  Race through the school fixing every device before time runs out. Stomp students to get past them, and watch out for teachers who will chase you down.<br><br>
   🔧 Walk into broken devices to fix them<br>
-  👟 Jump ON enemies to stomp them<br>
-  ☕ Grab coffee, floppy disks &amp; donuts<br>
-  ⚠️ Every 10th hallway: Face THE HEADTEACHER!<br><br>
-  Arrow Keys / WASD — Move &amp; Jump (Space)</p>
-  <button id="startbtn">▶ START YOUR SHIFT</button>
+  👟 Jump ON enemies from above to stomp them<br>
+  🪜 Jump onto locker tops to reach devices on platforms<br>
+  🪟 Jump from lockers to window sills, then to ceiling lights<br>
+  ☕ Grab power-ups &nbsp; ⚠️ Boss every 10th hallway<br>
+  P / ESC = pause &nbsp; Arrow Keys / WASD + Space</p>
+  <div id="charpicker" style="display:flex;flex-direction:column;align-items:center;gap:5px;width:100%;">
+    <div style="color:#ffdd00;font-family:'Press Start 2P',monospace;font-size:8px;">CUSTOMISE YOUR TECH</div>
+    <div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap;justify-content:center;">
+      <canvas id="charpreview" width="44" height="60" style="image-rendering:pixelated;background:#111;flex-shrink:0;"></canvas>
+      <div style="display:flex;flex-direction:column;gap:5px;">
+        <div style="display:flex;gap:4px;align-items:center;">
+          <span style="color:#aaffcc;font-family:monospace;font-size:11px;">Skin:</span>
+          <div id="skinbtns" style="display:flex;gap:3px;"></div>
+        </div>
+        <div style="display:flex;gap:4px;align-items:center;">
+          <span style="color:#aaffcc;font-family:monospace;font-size:11px;">Outfit:</span>
+          <div id="outfitbtns" style="display:flex;gap:3px;"></div>
+        </div>
+        <div style="display:flex;gap:4px;align-items:center;flex-wrap:wrap;">
+          <span style="color:#aaffcc;font-family:monospace;font-size:11px;">Hair:</span>
+          <div id="hairbtns" style="display:flex;gap:2px;flex-wrap:wrap;"></div>
+        </div>
+      </div>
+    </div>
+  </div>
+  <button id="startbtn">▶ START SHIFT</button>
   <div id="hstable"></div>
 </div>
 
@@ -75,6 +100,7 @@
 const AC0 = window.AudioContext||window.webkitAudioContext;
 let ac=null, muted=false;
 document.getElementById('mutebtn').onclick=()=>{muted=!muted;document.getElementById('mutebtn').textContent=muted?'🔇':'🔊';};
+document.getElementById('pausebtn').onclick=()=>{if(gameRunning&&!zDone)paused=!paused;};
 function gac(){if(!ac)ac=new AC0();return ac;}
 function tone(f,tp,dur,vol,f0){
   if(muted)return; vol=vol||0.13;
@@ -110,6 +136,7 @@ const SFX={
   lvlup:()=>[523,587,659,698,784,880,988,1046].forEach((f,i)=>setTimeout(()=>tone(f,'sine',0.15,0.12),i*80)),
   death:()=>[440,330,220,110].forEach((f,i)=>setTimeout(()=>tone(f,'sawtooth',0.18,0.12),i*120)),
   fixing:()=>tone(300+Math.random()*100,'square',0.05,0.04),
+  combo:()=>tone(440+combo*80,'sine',0.08,0.12),
   boss:()=>{tone(110,'sawtooth',0.3,0.15);setTimeout(()=>tone(73,'sawtooth',0.3,0.15),150);setTimeout(()=>tone(55,'sawtooth',0.4,0.18),300);},
   bossHit:()=>{nz(0.15,0.2,400);tone(220,'sawtooth',0.15,0.15,440);},
 };
@@ -159,11 +186,30 @@ const REF_H=400;
 function phys(v){return v*(H/REF_H);}
 // Accessors — re-evaluated whenever needed so resize is picked up
 function GRAVITY(){return 0.55*(H/REF_H);}
-function JUMP(){return -8.125*(H/REF_H);}  // 6.5 * 1.25 = 8.125 (25% higher)
-function SPD(){return 3.5*(H/REF_H);}
+function JUMP(){return -8.125*(H/REF_H);}
+function SPD(){return 3.5*(H/REF_H)*(difficulty==='easy'?0.85:difficulty==='hard'?1.2:1);}
+function ENEMY_SPD_MULT(){return difficulty==='easy'?0.7:difficulty==='hard'?1.35:1;}
 const MAX_HP=5;
 const HOODIE_COLS=['#cc4444','#4488cc','#44aa44','#aa44cc'];
 const IS_BOSS=(lvl)=>lvl%10===0;
+
+// ── Skin tones & gender ───────────────────────────────────────
+const SKIN_TONES=[
+  {name:'Light',   skin:'#fde0c8', shade:'#e8c4a0'},
+  {name:'Medium',  skin:'#d4956a', shade:'#b87448'},
+  {name:'Tan',     skin:'#c68642', shade:'#a06030'},
+  {name:'Brown',   skin:'#8d5524', shade:'#6b3f18'},
+  {name:'Dark',    skin:'#4a2c17', shade:'#33180a'},
+];
+// Player customisation (persisted)
+let playerSkin=0, playerOutfit='trousers', playerHairStyle=0;
+try{
+  const saved=JSON.parse(localStorage.getItem('itguy_char')||'{}');
+  playerSkin=saved.skin||0; playerOutfit=(['trousers','shorts','dress'].includes(saved.outfit)?saved.outfit:'trousers');
+  // Remap removed styles (1=fringe, 5=ponytail) to short (0)
+  const removedStyles=[1,5];
+  playerHairStyle=removedStyles.includes(saved.hair)?0:(saved.hair||0);
+}catch(e){}
 
 // ═══ STATE ════════════════════════════════════════════════════
 let keys={},gameRunning=false,score=0,level=1;
@@ -178,7 +224,19 @@ let highScores=[];
 let zoneFrames=0;   // frames elapsed this zone
 let totalFrames=0;  // frames accumulated across all hallways this run
 let timeBonus=0;    // time bonus awarded at end
+// New state
+let combo=0;            // consecutive stomps without touching ground
+let comboTimer=0;       // frames since last stomp (resets combo)
+let paused=false;       // pause state
+let flashFrames=0;      // white screen flash on stomp
+let difficulty='normal';// 'easy','normal','hard'
+
+
+
+let idleTimer=0;        // frames player has been still (for idle animation)
+let idleFrame=0;        // idle anim sub-frame
 try{highScores=JSON.parse(localStorage.getItem('itguy_hs')||'[]');}catch(e){}
+try{difficulty=localStorage.getItem('itguy_diff')||'normal';}catch(e){}
 
 // ═══ MESSAGES ════════════════════════════════════════════════
 const DEV_MSGS={
@@ -331,7 +389,7 @@ function genLevel(lvl){
       // Ensure patrol range is always wide enough to move (at least 1 TILE of travel)
       const safeRight = Math.max(patLeft + TILE, patRight);
 
-      const spd2 = (0.5 + 0.2*(i%3) + lvl*0.1) * (H/REF_H);
+      const spd2 = (0.5 + 0.2*(i%3) + lvl*0.1) * (H/REF_H) * ENEMY_SPD_MULT();
       enemies.push({
         x: plat.x + plat.w*0.5 - TILE*0.35,
         y: plat.y - TILE,
@@ -339,27 +397,36 @@ function genLevel(lvl){
         vx: -spd2, vy: 0, onGround: false,
         type: 'student',
         hoodieColor: HOODIE_COLS[i%4],
+        skinIdx: Math.floor(rng()*SKIN_TONES.length),
+        outfit: ['trousers','shorts','dress'][Math.floor(rng()*3)],
         walkFrame:0, walkTimer:0,
         stunned:false, stunTimer:0, dead:false,
         patrol:{left:patLeft, right:safeRight},
         hp:1, facing:-1,
+        respawnTimer:0,
+        spawnX:plat.x+plat.w*0.5-TILE*0.35, spawnY:plat.y-TILE,
+        baseSpd:spd2,
       });
     });
 
-    // Teacher boss-type enemy — patrols on the ground near the end of the level
     const teacherX = lw * 0.75;
     if(teacherX < lw-200){
-      const tspd = (0.8+lvl*0.1)*(H/REF_H);
+      const tspd = (0.8+lvl*0.1)*(H/REF_H)*ENEMY_SPD_MULT();
       enemies.push({
         x:teacherX, y:EH-TILE-TILE,
         w:TILE*0.7, h:TILE,
         vx:-tspd, vy:0, onGround:false,
         type:'teacher',
         hoodieColor:'#665566',
+        skinIdx: Math.floor(rng()*SKIN_TONES.length),
+        outfit: ['trousers','shorts','dress'][Math.floor(rng()*3)],
         walkFrame:0, walkTimer:0,
         stunned:false, stunTimer:0, dead:false,
         patrol:{left:teacherX-TILE*5, right:teacherX+TILE*5},
         hp:2, facing:-1, jumpCooldown:0,
+        respawnTimer:0,
+        spawnX:teacherX, spawnY:EH-TILE-TILE,
+        baseSpd:tspd,
       });
     }
   }
@@ -598,8 +665,10 @@ function initLevel(){
   pl.vx=0;pl.vy=0;pl.fixing=false;pl.fixTarget=null;pl.dead=false;pl.coffeeTimer=0;
   cam.x=0; parts=[];ftxts=[];invT=0;shake=0;
   zDone=false;zFinal=false;boss=null;
-  totalFrames+=zoneFrames; // carry forward time from completed hallways
+  totalFrames+=zoneFrames;
   zoneFrames=0; timeBonus=0;
+  combo=0; comboTimer=0;
+  flashFrames=0; idleTimer=0; idleFrame=0;
   if(ld.isBoss){spawnBoss();SFX.boss();setMsg('⚡ BOSS ZONE! Stomp the Headteacher!');}
   else setMsg('Hallway '+level+' — Fix all '+tTotal+' devices!');
   updateTickUI();updateUI();updateHpUI();
@@ -637,7 +706,7 @@ function resolveP(obj){
 
 // ═══ UPDATE PLAYER ═══════════════════════════════════════════
 function updatePlayer(){
-  if(pl.dead||zDone)return;
+  if(pl.dead||zDone||paused)return;
   const left=keys['ArrowLeft']||keys['KeyA'];
   const right=keys['ArrowRight']||keys['KeyD'];
   const jump=keys['ArrowUp']||keys['KeyW']||keys['Space'];
@@ -645,6 +714,16 @@ function updatePlayer(){
   if(left){pl.vx=-spd;pl.facing=-1;}
   else if(right){pl.vx=spd;pl.facing=1;}
   else pl.vx*=0.7;
+
+  // Idle animation
+  if(Math.abs(pl.vx)<0.3&&pl.onGround){
+    idleTimer++; if(idleTimer>120){idleFrame=Math.floor(idleTimer/30)%4;}
+  } else { idleTimer=0; idleFrame=0; }
+
+  // Combo timer decay
+  if(comboTimer>0){ comboTimer--; if(comboTimer===0&&combo>0){ combo=0; } }
+  if(pl.onGround&&pl.vy>=0) comboTimer=Math.min(comboTimer,90); // grace period on landing
+
   const wog=pl.onGround;
   if(jump&&pl.onGround){pl.vy=JUMP();pl.onGround=false;SFX.jump();}
   pl.vy+=GRAVITY();pl.x+=pl.vx;pl.y+=pl.vy;
@@ -657,6 +736,7 @@ function updatePlayer(){
   const tc=pl.x-W/2+pl.w/2; cam.x+=(tc-cam.x)*0.12;
   cam.x=Math.max(0,Math.min(cam.x,ld.width-W));
   if(invT>0)invT--; if(pl.coffeeTimer>0)pl.coffeeTimer--;
+  if(flashFrames>0)flashFrames--;
 
   // Fix devices
   pl.fixing=false;pl.fixTarget=null;
@@ -676,7 +756,6 @@ function updatePlayer(){
           if(tLeft===0){
             SFX.lvlup();
             score+=500;
-            // Time bonus: 1000pts base, decreasing by ~16pts/sec, min 0
             const secsElapsed=Math.floor(zoneFrames/60);
             timeBonus=Math.max(0, 1000 - secsElapsed*16);
             score+=timeBonus;
@@ -706,12 +785,30 @@ function updatePlayer(){
   // Enemy collision
   if(invT<=0&&!ld.isBoss){
     for(const e of ld.enemies){
-      if(e.dead||!ro(pl.x,pl.y,pl.w,pl.h,e.x,e.y,e.w,e.h))continue;
+      if(e.dead||e.respawnTimer>0||!ro(pl.x,pl.y,pl.w,pl.h,e.x,e.y,e.w,e.h))continue;
       if(pl.vy>1&&pl.y+pl.h-pl.vy<=e.y+6){
-        pl.vy=JUMP()*0.65;e.hp--;SFX.stomp();shake=8;
+        // Stomp! 
+        pl.vy=JUMP()*0.65; e.hp--;
+        combo++; comboTimer=120;
+        SFX.stomp(); SFX.combo();
+        shake=8; flashFrames=4;
+        const comboMult=Math.min(combo,8);
         spawnP(e.x+e.w/2,e.y,10,['#ffaa00','#ff4444','#fff'],3,35);
-        if(e.hp<=0){e.dead=true;const pts=e.type==='teacher'?200:100;score+=pts;spawnT(e.x,e.y-12,'+'+pts,'#ffaa00');setMsg(EN_MSGS[Math.floor(Math.random()*EN_MSGS.length)]);}
-        else{e.stunned=true;e.stunTimer=90;setMsg('🧒 Stunned! Stomp again!');}
+        if(e.hp<=0){
+          e.dead=true;
+          const pts=Math.round((e.type==='teacher'?200:100)*comboMult);
+          score+=pts;
+          
+          
+          spawnT(e.x,e.y-12,(combo>1?'x'+combo+'! ':'')+'+'+pts,'#ffaa00');
+          setMsg(combo>2?'🔥 x'+combo+' COMBO! '+EN_MSGS[Math.floor(Math.random()*EN_MSGS.length)]:EN_MSGS[Math.floor(Math.random()*EN_MSGS.length)]);
+          // Schedule respawn (students only, not in boss hallway)
+          if(e.type==='student'){e.respawnTimer=300+level*60;}
+        } else {
+          e.stunned=true;e.stunTimer=90;
+          spawnT(e.x,e.y-12,'STUNNED!','#ffdd00');
+          setMsg('🧒 Stunned! Stomp again!');
+        }
         updateUI();
       } else takeDmg(1);
     }
@@ -731,13 +828,26 @@ function takeDmg(amt){
 
 // ═══ UPDATE ENEMIES ══════════════════════════════════════════
 function updateEnemies(){
-  if(ld.isBoss)return;
+  if(ld.isBoss||paused)return;
   for(const e of ld.enemies){
+    // Respawn countdown
+    if(e.respawnTimer>0){
+      e.respawnTimer--;
+      if(e.respawnTimer===0){
+        // Respawn off-screen in direction player came from
+        e.dead=false; e.hp=e.type==='teacher'?2:1;
+        e.x=e.spawnX; e.y=e.spawnY; e.vy=0;
+        e.vx=-e.baseSpd; e.facing=-1;
+        e.stunned=false; e.stunTimer=0;
+        spawnP(e.x+e.w/2,e.y,6,['#aaffcc','#00ff88'],2,30);
+      }
+      continue;
+    }
     if(e.dead)continue;
     if(e.stunned){e.stunTimer--;if(e.stunTimer<=0)e.stunned=false;e.vy+=GRAVITY();e.y+=e.vy;resolveP(e);continue;}
 
     if(e.type==='teacher'){
-      const chaseSpd=(0.9+level*0.12)*(H/REF_H);
+      const chaseSpd=(0.9+level*0.12)*(H/REF_H)*ENEMY_SPD_MULT();
       const teacherJump = JUMP();
       const maxRise  = Math.abs(teacherJump * teacherJump / (2 * GRAVITY()));
       const maxReach = Math.round(100*(H/REF_H));
@@ -1271,31 +1381,84 @@ function drawCollectibles(){
 // ─── Shared body renderer ────────────────────────────────────
 function drawBody(w,h,bob,leg,o){
   const r=Math.round;
-  // Legs
-  ctx.fillStyle=o.pants;
-  ctx.fillRect(r(w*0.21),r(h*0.78+bob),r(w*0.21),r(h*0.3-leg*3));
-  ctx.fillRect(r(w*0.54),r(h*0.78+bob),r(w*0.21),r(h*0.3+leg*3));
-  ctx.fillStyle=o.shoes;
-  ctx.fillRect(r(w*0.125),r(h*0.975+bob-leg*3),r(w*0.33),4);
-  ctx.fillRect(r(w*0.46), r(h*0.975+bob+leg*3),r(w*0.33),4);
-  if(o.shoeStripe){ctx.fillStyle=o.shoeStripe;ctx.fillRect(r(w*0.125),r(h*0.975+bob-leg*3),r(w*0.33),1);ctx.fillRect(r(w*0.46),r(h*0.975+bob+leg*3),r(w*0.33),1);}
-  // Body
-  ctx.fillStyle=o.shirt;
-  ctx.fillRect(r(w*0.21),r(h*0.4+bob),r(w*0.58),r(h*0.4));
-  // Arms
-  if(o.fixing){
-    ctx.fillStyle='#f5c8a0';ctx.fillRect(-4,r(h*0.44+bob),8,5);ctx.fillRect(r(w*0.79),r(h*0.44+bob),8,5);
-    ctx.fillStyle='#ffaa00';ctx.fillRect(r(w*1.0),r(h*0.42+bob),3,8);
-    ctx.fillStyle='#888';ctx.fillRect(r(w*1.04),r(h*0.59+bob),2,5);
+  const skin=o.skin||'#f5c8a0';
+  const outfit=o.outfit||'trousers'; // 'trousers' | 'shorts' | 'dress'
+
+  if(outfit==='dress'){
+    // Bare legs (skin coloured)
+    ctx.fillStyle=skin;
+    ctx.fillRect(r(w*0.21),r(h*0.78+bob),r(w*0.21),r(h*0.3-leg*3));
+    ctx.fillRect(r(w*0.54),r(h*0.78+bob),r(w*0.21),r(h*0.3+leg*3));
+    // Shoes
+    ctx.fillStyle=o.shoes;
+    ctx.fillRect(r(w*0.125),r(h*0.975+bob-leg*3),r(w*0.33),4);
+    ctx.fillRect(r(w*0.46), r(h*0.975+bob+leg*3),r(w*0.33),4);
+    // Dress body (covers torso + skirt)
+    ctx.fillStyle=o.shirt;
+    ctx.fillRect(r(w*0.18),r(h*0.4+bob),r(w*0.64),r(h*0.45));
+    ctx.fillRect(r(w*0.14),r(h*0.72+bob),r(w*0.72),r(h*0.1));
+    // Bare arms (skin)
+    ctx.fillStyle=skin;
+    ctx.fillRect(r(w*0.06),r(h*0.44+bob+leg*2),4,r(h*0.28));
+    ctx.fillRect(r(w*0.77),r(h*0.44+bob-leg*2),4,r(h*0.28));
+    ctx.fillRect(r(w*0.02),r(h*0.69+bob+leg*2),5,5);
+    ctx.fillRect(r(w*0.77),r(h*0.69+bob-leg*2),5,5);
+  } else if(outfit==='shorts'){
+    // Shorts — short pants (skin below knee)
+    ctx.fillStyle=o.pants;
+    ctx.fillRect(r(w*0.21),r(h*0.78+bob),r(w*0.21),r(h*0.16-leg*1.5));
+    ctx.fillRect(r(w*0.54),r(h*0.78+bob),r(w*0.21),r(h*0.16+leg*1.5));
+    // Bare lower legs
+    ctx.fillStyle=skin;
+    ctx.fillRect(r(w*0.21),r(h*0.88+bob-leg*1.5),r(w*0.21),r(h*0.14));
+    ctx.fillRect(r(w*0.54),r(h*0.88+bob+leg*1.5),r(w*0.21),r(h*0.14));
+    // Shoes
+    ctx.fillStyle=o.shoes;
+    ctx.fillRect(r(w*0.125),r(h*0.975+bob-leg*3),r(w*0.33),4);
+    ctx.fillRect(r(w*0.46), r(h*0.975+bob+leg*3),r(w*0.33),4);
+    if(o.shoeStripe){ctx.fillStyle=o.shoeStripe;ctx.fillRect(r(w*0.125),r(h*0.975+bob-leg*3),r(w*0.33),1);ctx.fillRect(r(w*0.46),r(h*0.975+bob+leg*3),r(w*0.33),1);}
+    // T-shirt body (shorter)
+    ctx.fillStyle=o.shirt;
+    ctx.fillRect(r(w*0.21),r(h*0.45+bob),r(w*0.58),r(h*0.34));
+    // Bare arms
+    ctx.fillStyle=skin;
+    ctx.fillRect(r(w*0.08),r(h*0.44+bob+leg*2),4,r(h*0.28));
+    ctx.fillRect(r(w*0.75),r(h*0.44+bob-leg*2),4,r(h*0.28));
+    ctx.fillRect(r(w*0.04),r(h*0.69+bob+leg*2),5,5);
+    ctx.fillRect(r(w*0.75),r(h*0.69+bob-leg*2),5,5);
+    if(o.phone){ctx.fillStyle='#111';ctx.fillRect(r(w*0.76),r(h*0.62+bob-leg*2),5,7);ctx.fillStyle='#5599ff';ctx.fillRect(r(w*0.77),r(h*0.63+bob-leg*2),3,5);}
+    if(o.papers){ctx.fillStyle='#eee';ctx.fillRect(r(w*0.75),r(h*0.55+bob-leg*2),6,8);ctx.fillStyle='#bbb';ctx.fillRect(r(w*0.76),r(h*0.57+bob-leg*2),4,1);ctx.fillRect(r(w*0.76),r(h*0.60+bob-leg*2),4,1);}
   } else {
+    // Trousers — long pants and long-sleeved shirt
+    ctx.fillStyle=o.pants;
+    ctx.fillRect(r(w*0.21),r(h*0.78+bob),r(w*0.21),r(h*0.3-leg*3));
+    ctx.fillRect(r(w*0.54),r(h*0.78+bob),r(w*0.21),r(h*0.3+leg*3));
+    ctx.fillStyle=o.shoes;
+    ctx.fillRect(r(w*0.125),r(h*0.975+bob-leg*3),r(w*0.33),4);
+    ctx.fillRect(r(w*0.46), r(h*0.975+bob+leg*3),r(w*0.33),4);
+    if(o.shoeStripe){ctx.fillStyle=o.shoeStripe;ctx.fillRect(r(w*0.125),r(h*0.975+bob-leg*3),r(w*0.33),1);ctx.fillRect(r(w*0.46),r(h*0.975+bob+leg*3),r(w*0.33),1);}
+    // Long-sleeved shirt
+    ctx.fillStyle=o.shirt;
+    ctx.fillRect(r(w*0.21),r(h*0.4+bob),r(w*0.58),r(h*0.4));
+    // Long sleeves (shirt colour to wrist)
     ctx.fillStyle=o.shirt;
     ctx.fillRect(r(w*0.08),r(h*0.44+bob+leg*2),4,r(h*0.25));
     ctx.fillRect(r(w*0.75),r(h*0.44+bob-leg*2),4,r(h*0.25));
-    ctx.fillStyle='#f5c8a0';
+    ctx.fillStyle=skin;
     ctx.fillRect(r(w*0.04),r(h*0.66+bob+leg*2),5,5);
     ctx.fillRect(r(w*0.75),r(h*0.66+bob-leg*2),5,5);
     if(o.phone){ctx.fillStyle='#111';ctx.fillRect(r(w*0.76),r(h*0.62+bob-leg*2),5,7);ctx.fillStyle='#5599ff';ctx.fillRect(r(w*0.77),r(h*0.63+bob-leg*2),3,5);}
     if(o.papers){ctx.fillStyle='#eee';ctx.fillRect(r(w*0.75),r(h*0.55+bob-leg*2),6,8);ctx.fillStyle='#bbb';ctx.fillRect(r(w*0.76),r(h*0.57+bob-leg*2),4,1);ctx.fillRect(r(w*0.76),r(h*0.60+bob-leg*2),4,1);}
+  }
+
+  // Fixing animation override arms
+  // Fixing — only right arm extends with screwdriver, no extra left arm
+  if(o.fixing){
+    ctx.fillStyle=o.outfit==='trousers'?o.shirt:skin;
+    ctx.fillRect(r(w*0.75),r(h*0.44+bob),4,r(h*0.25)); // right arm reaching out
+    ctx.fillStyle=skin;ctx.fillRect(r(w*0.79),r(h*0.64+bob),5,5); // hand
+    ctx.fillStyle='#ffaa00';ctx.fillRect(r(w*1.0),r(h*0.62+bob),3,8); // screwdriver
+    ctx.fillStyle='#888';ctx.fillRect(r(w*1.04),r(h*0.72+bob),2,5); // tip
   }
   // Bag
   if(o.bag){
@@ -1304,7 +1467,7 @@ function drawBody(w,h,bob,leg,o){
   }
   // Head
   const hx=r(w*0.21),hy=r(h*0.1+bob),hw=r(w*0.58),hh=r(h*0.32);
-  ctx.fillStyle='#f5c8a0';ctx.fillRect(hx,hy,hw,hh);
+  ctx.fillStyle=skin;ctx.fillRect(hx,hy,hw,hh);
   // Hair
   ctx.fillStyle=o.hair;
   const hs=o.hairStyle||0;
@@ -1312,14 +1475,20 @@ function drawBody(w,h,bob,leg,o){
   else if(hs===1){ctx.fillRect(hx,hy,hw,r(hh*0.36));ctx.fillRect(hx,hy,r(hw*0.5),r(hh*0.56));ctx.fillRect(hx-1,hy,2,r(hh*0.62));}
   else if(hs===2){ctx.fillRect(hx,hy,hw,r(hh*0.24));for(let s=0;s<5;s++)ctx.fillRect(hx+r(hw*0.06)+s*r(hw*0.18),hy-r(hh*0.18),r(hw*0.10),r(hh*0.2));ctx.fillRect(hx-1,hy,2,r(hh*0.48));ctx.fillRect(hx+hw-1,hy,2,r(hh*0.48));}
   else if(hs===3){ctx.fillRect(hx,hy,hw,r(hh*0.3));ctx.fillRect(hx-2,hy,4,r(hh*0.88));ctx.fillRect(hx+hw-2,hy,4,r(hh*0.88));}
-  else{ctx.fillRect(hx,hy,hw,r(hh*0.28));ctx.fillRect(hx-1,hy,3,r(hh*0.5));ctx.fillRect(hx+hw-2,hy,3,r(hh*0.5));ctx.fillRect(hx+r(hw*0.3),hy-r(hh*0.22),r(hw*0.4),r(hh*0.26));}
-  // Eyes
-  ctx.fillStyle='#fff';ctx.fillRect(hx+r(hw*0.14),hy+r(hh*0.38),3,3);ctx.fillRect(hx+r(hw*0.55),hy+r(hh*0.38),3,3);
-  ctx.fillStyle=o.eye||'#223388';ctx.fillRect(hx+r(hw*0.19),hy+r(hh*0.44),2,2);ctx.fillRect(hx+r(hw*0.60),hy+r(hh*0.44),2,2);
+  else if(hs===4){ctx.fillRect(hx,hy,hw,r(hh*0.28));ctx.fillRect(hx-1,hy,3,r(hh*0.5));ctx.fillRect(hx+hw-2,hy,3,r(hh*0.5));ctx.fillRect(hx+r(hw*0.3),hy-r(hh*0.22),r(hw*0.4),r(hh*0.26));}
+  else if(hs===5){ctx.fillRect(hx,hy,hw,r(hh*0.3));ctx.fillRect(hx-2,hy,4,r(hh*0.6));ctx.fillRect(hx+hw-2,hy,4,r(hh*0.6));ctx.fillRect(hx+hw-3,hy+r(hh*0.2),5,r(hh*0.55));}
+  else if(hs===6){ctx.fillRect(hx-3,hy-r(hh*0.22),hw+6,r(hh*0.52));ctx.fillRect(hx-4,hy,5,r(hh*0.5));ctx.fillRect(hx+hw-1,hy,5,r(hh*0.5));}
+  // Eyes — blink when idle
+  const blinking=idleTimer>0&&(idleTimer%90<6);
+  ctx.fillStyle='#fff';
+  if(!blinking){ctx.fillRect(hx+r(hw*0.14),hy+r(hh*0.38),3,3);ctx.fillRect(hx+r(hw*0.55),hy+r(hh*0.38),3,3);}
+  else{ctx.fillRect(hx+r(hw*0.14),hy+r(hh*0.42),3,1);ctx.fillRect(hx+r(hw*0.55),hy+r(hh*0.42),3,1);}
+  ctx.fillStyle=o.eye||'#223388';
+  if(!blinking){ctx.fillRect(hx+r(hw*0.19),hy+r(hh*0.44),2,2);ctx.fillRect(hx+r(hw*0.60),hy+r(hh*0.44),2,2);}
   // Glasses
   if(o.glasses){ctx.strokeStyle='#888';ctx.lineWidth=1;ctx.strokeRect(hx+r(hw*0.08),hy+r(hh*0.33),5,5);ctx.strokeRect(hx+r(hw*0.49),hy+r(hh*0.33),5,5);ctx.beginPath();ctx.moveTo(hx+r(hw*0.08)+5,hy+r(hh*0.37));ctx.lineTo(hx+r(hw*0.49),hy+r(hh*0.37));ctx.stroke();}
-  // Lanyard
-  if(o.lanyard){ctx.fillStyle='#ff8800';ctx.fillRect(r(w*0.46),r(h*0.41+bob),2,r(h*0.12));ctx.fillStyle='#ffaa44';ctx.fillRect(r(w*0.38),r(h*0.52+bob),5,4);}
+  // Lanyard — only with trousers (formal shirt)
+  if(o.lanyard&&o.outfit==='trousers'){ctx.fillStyle='#ff8800';ctx.fillRect(r(w*0.46),r(h*0.41+bob),2,r(h*0.12));ctx.fillStyle='#ffaa44';ctx.fillRect(r(w*0.38),r(h*0.52+bob),5,4);}
   // Coffee glow
   if(o.coffeeGlow){ctx.shadowBlur=0;ctx.fillStyle='#ff8800';ctx.font='8px serif';ctx.fillText('⚡',r(w*0.75),r(h*0.15+bob));}
 }
@@ -1336,10 +1505,20 @@ function drawEnemy(e){
   else ctx.translate(sx,e.y);
   if(e.stunned)ctx.globalAlpha=0.6;
   if(isT){
-    drawBody(e.w,e.h,bob,leg,{shirt:'#665577',pants:'#443344',shoes:'#333',shoeStripe:null,hair:'#886644',hairStyle:4,eye:'#334433',glasses:true,lanyard:false,bag:false,phone:false,papers:true,fixing:false});
+    const st=SKIN_TONES[e.skinIdx||0];
+    drawBody(e.w,e.h,bob,leg,{shirt:'#665577',pants:'#443344',shoes:'#333',shoeStripe:null,
+      skin:st.skin,outfit:e.outfit||'trousers',
+      hair:'#886644',hairStyle:e.outfit==='dress'?4:0,eye:'#334433',
+      glasses:true,lanyard:false,bag:false,phone:false,papers:true,fixing:false});
   } else {
     const hi=HOODIE_COLS.indexOf(e.hoodieColor)%4;
-    drawBody(e.w,e.h,bob,leg,{shirt:e.hoodieColor,pants:'#223355',shoes:'#eeeeff',shoeStripe:'#cc2200',hair:(['#1a0a00','#cc8833','#222222','#cc2200'])[hi],hairStyle:hi,eye:'#222',glasses:false,lanyard:false,bag:false,phone:true,papers:false,fixing:false});
+    const st=SKIN_TONES[e.skinIdx||0];
+    const hairCols=['#1a0a00','#cc8833','#222222','#cc2200','#1a1a1a','#8b4513'];
+    const hs=e.outfit==='dress'?[4,6,3,0][hi%4]:e.outfit==='shorts'?[2,6,0,3][hi%4]:[0,2,3,6][hi%4];
+    drawBody(e.w,e.h,bob,leg,{shirt:e.hoodieColor,pants:'#223355',shoes:'#eeeeff',shoeStripe:'#cc2200',
+      skin:st.skin,outfit:e.outfit||'trousers',
+      hair:hairCols[hi%hairCols.length],hairStyle:hs,
+      eye:'#222',glasses:false,lanyard:false,bag:false,phone:true,papers:false,fixing:false});
   }
   if(e.stunned){
     ctx.globalAlpha=1;const t=Date.now()/200;
@@ -1360,7 +1539,14 @@ function drawPlayer(){
   if(pl.coffeeTimer>0){ctx.shadowColor='#ff8800';ctx.shadowBlur=12;}
   if(pl.facing===-1){ctx.translate(sx+pl.w,pl.y);ctx.scale(-1,1);}
   else ctx.translate(sx,pl.y);
-  drawBody(pl.w,pl.h,bob,leg,{shirt:'#2255cc',pants:'#333355',shoes:'#111',shoeStripe:null,hair:'#3a2a10',hairStyle:0,eye:'#223388',glasses:true,lanyard:true,bag:false,phone:false,papers:false,fixing:pl.fixing,coffeeGlow:pl.coffeeTimer>0});
+  const st=SKIN_TONES[playerSkin];
+  drawBody(pl.w,pl.h,bob,leg,{
+    shirt:'#2255cc',pants:'#333355',shoes:'#111',shoeStripe:null,
+    skin:st.skin,outfit:playerOutfit,
+    hair:'#3a2a10',hairStyle:playerHairStyle,eye:'#223388',
+    glasses:true,lanyard:true,bag:false,phone:false,papers:false,
+    fixing:pl.fixing,coffeeGlow:pl.coffeeTimer>0,
+  });
   ctx.shadowBlur=0;ctx.restore();
 }
 
@@ -1370,11 +1556,16 @@ function drawHUD(){
   ctx.fillStyle=vg;ctx.fillRect(0,0,W,H);
   ctx.shadowBlur=0;
 
+  // ── Screen flash on stomp ─────────────────────────────────────
+  if(flashFrames>0){
+    ctx.fillStyle=`rgba(255,255,255,${flashFrames*0.07})`;
+    ctx.fillRect(0,0,W,H);
+  }
+
   // ── Timer & time bonus ───────────────────────────────────────
   const secs=Math.floor(zoneFrames/60);
   const mins=Math.floor(secs/60);
   const ss=String(secs%60).padStart(2,'0');
-  const timeStr=mins+':'+ss;
   const potentialBonus=Math.max(0,1000-secs*16);
   const timerCol=potentialBonus>500?'#00ff88':potentialBonus>200?'#ffdd00':'#ff4444';
   const timerFontSz=Math.max(6,Math.round(H/55));
@@ -1383,11 +1574,24 @@ function drawHUD(){
   ctx.fillStyle=timerCol;
   ctx.font=timerFontSz+'px "Press Start 2P"';
   ctx.textAlign='right';
-  ctx.fillText('⏱ '+timeStr,W-8,8+timerFontSz);
-  ctx.fillStyle=timerCol;
+  ctx.fillText('⏱ '+mins+':'+ss,W-8,8+timerFontSz);
   ctx.font=Math.max(5,timerFontSz-1)+'px "Press Start 2P"';
   ctx.fillText('+'+potentialBonus+'pts',W-8,10+timerFontSz*2);
   ctx.textAlign='left';
+
+  // ── Combo display ────────────────────────────────────────────
+  if(combo>1){
+    const cf=Math.max(6,Math.round(H/40));
+    const pulse=1+Math.sin(Date.now()/80)*0.08;
+    ctx.save();ctx.translate(W/2,H*0.12);ctx.scale(pulse,pulse);
+    ctx.fillStyle='rgba(0,0,0,0.5)';
+    ctx.font=cf+'px "Press Start 2P"';
+    ctx.textAlign='center';
+    ctx.fillText('🔥 x'+combo+' COMBO',0,0);
+    ctx.fillStyle=combo>=5?'#ff4444':combo>=3?'#ffaa00':'#ffdd00';
+    ctx.fillText('🔥 x'+combo+' COMBO',1,1);
+    ctx.textAlign='left';ctx.restore();
+  }
 
   // ── Coffee bar ───────────────────────────────────────────────
   if(pl.coffeeTimer>0){
@@ -1396,19 +1600,36 @@ function drawHUD(){
     ctx.strokeStyle='#ff8800';ctx.lineWidth=1;ctx.strokeRect(10,10,100,8);
     ctx.fillStyle='#ff8800';ctx.font='5px "Press Start 2P"';ctx.fillText('☕ TURBO',13,17);
   }
+
+  // ── Pause overlay ────────────────────────────────────────────
+  if(paused){
+    ctx.fillStyle='rgba(0,0,0,0.72)';ctx.fillRect(0,0,W,H);
+    ctx.textAlign='center';
+    const pf=Math.max(10,Math.round(H/28));
+    ctx.fillStyle='#00ff88';ctx.font=pf+'px "Press Start 2P"';
+    ctx.fillText('PAUSED',W/2,H*0.38);
+    const sf=Math.max(6,Math.round(H/55));
+    ctx.fillStyle='#aaffcc';ctx.font=sf+'px "Press Start 2P"';
+    ctx.fillText('SPACE / P — Resume',W/2,H*0.52);
+    ctx.fillText('Difficulty: '+difficulty.toUpperCase(),W/2,H*0.62);
+    ctx.fillText('E — Easy  N — Normal  H — Hard',W/2,H*0.72);
+    ctx.textAlign='left';
+  }
+
+  // ── Tutorial (hallway 1 only) ─────────────────────────────────
   if(shake>0)shake*=0.8;
 }
 
 // ═══ GAME LOOP ════════════════════════════════════════════════
 function loop(){
   if(!gameRunning)return;
-  zoneFrames++;
+  if(!paused) zoneFrames++;
   let shx=0,shy=0;
   if(shake>0.5){shx=(Math.random()-0.5)*shake;shy=(Math.random()-0.5)*shake;}
   ctx.save();ctx.translate(shx,shy);
   ctx.clearRect(-10,-10,W+20,H+20);
   drawBG();drawPlats();drawDecs();drawDevices();drawCollectibles();
-  updatePlayer();updateEnemies();updateBoss();tickP();tickT();
+  if(!paused){updatePlayer();updateEnemies();updateBoss();tickP();tickT();}
   for(const e of ld.enemies)drawEnemy(e);
   drawBoss();drawPlayer();drawP();drawT();drawHUD();
   ctx.restore();
@@ -1425,7 +1646,7 @@ function showDeathScreen(){
 }
 function showMainMenu(){
   const ov=document.getElementById('overlay');
-  ov.querySelector('h1').innerHTML='💻 IT SUPPORT<br>TO THE RESCUE!';
+  ov.querySelector('h1').innerHTML="💻 IT'S A GAME";
   ov.querySelector('p').innerHTML='Students keep unplugging things, opening phishing emails and using the router as a footrest.<br><br>🔧 Walk into broken devices to fix them<br>👟 Jump ON enemies to stomp them<br>☕ Grab coffee, USB drives &amp; donuts<br>⚠️ Every 10th hallway: Face THE HEADTEACHER!<br><br>Arrow Keys / WASD — Move &amp; Jump (Space)';
   document.getElementById('startbtn').textContent='▶ START SHIFT';
   renderHS();ov.classList.remove('hidden');
@@ -1437,6 +1658,18 @@ document.addEventListener('keydown',e=>{
   if(['Space','ArrowUp','ArrowDown','ArrowLeft','ArrowRight'].includes(e.code))e.preventDefault();
   if(e.code==='KeyR'&&!gameRunning&&pl.dead){level=1;score=0;totalFrames=0;zoneFrames=0;pl.hp=MAX_HP;pl.dead=false;startGame();}
   if((e.code==='Space'||e.code==='Enter')&&zDone)handleContinue();
+
+  // Pause toggle
+  if((e.code==='KeyP'||e.code==='Escape')&&gameRunning&&!zDone){paused=!paused;}
+  // Resume with Space when paused (but don't also jump)
+  if(e.code==='Space'&&paused){paused=false;e.preventDefault();}
+
+  // Difficulty change (only while paused)
+  if(paused){
+    if(e.code==='KeyE'){difficulty='easy';try{localStorage.setItem('itguy_diff','easy');}catch(x){}}
+    if(e.code==='KeyN'){difficulty='normal';try{localStorage.setItem('itguy_diff','normal');}catch(x){}}
+    if(e.code==='KeyH'){difficulty='hard';try{localStorage.setItem('itguy_diff','hard');}catch(x){}}
+  }
 });
 document.addEventListener('keyup',e=>{keys[e.code]=false;});
 canvas.addEventListener('click',()=>{if(zDone)handleContinue();});
@@ -1444,6 +1677,8 @@ canvas.addEventListener('touchend',e=>{e.preventDefault();if(zDone)handleContinu
 
 function startGame(){
   document.getElementById('overlay').classList.add('hidden');
+  document.getElementById('touchpad').style.display='flex';
+  document.getElementById('gamecanvas').style.borderColor='#00ff88';
   initLevel();gameRunning=true;requestAnimationFrame(loop);
 }
 
@@ -1466,6 +1701,75 @@ tchBtn('tch-right','ArrowRight');
 tchBtn('tch-jump','Space');
 
 renderHS();
+
+// ═══ CHARACTER PICKER ════════════════════════════════════════
+function saveChar(){try{localStorage.setItem('itguy_char',JSON.stringify({skin:playerSkin,outfit:playerOutfit,hair:playerHairStyle}));}catch(e){}}
+
+function buildCharPicker(){
+  // Skin buttons
+  const sb=document.getElementById('skinbtns'); if(!sb)return; sb.innerHTML='';
+  SKIN_TONES.forEach((t,i)=>{
+    const b=document.createElement('button');
+    b.style.cssText=`width:22px;height:22px;background:${t.skin};border:2px solid ${i===playerSkin?'#00ff88':'#444'};cursor:pointer;border-radius:50%;`;
+    b.title=t.name;
+    b.onclick=()=>{playerSkin=i;saveChar();buildCharPicker();updatePreview();};
+    sb.appendChild(b);
+  });
+  // Outfit buttons
+  const ob=document.getElementById('outfitbtns'); if(!ob)return; ob.innerHTML='';
+  [{v:'trousers',l:'👔',tip:'Long shirt & pants'},{v:'shorts',l:'🩳',tip:'T-shirt & shorts'},{v:'dress',l:'👗',tip:'Dress'}].forEach(g=>{
+    const b=document.createElement('button');
+    b.textContent=g.l; b.title=g.tip;
+    b.style.cssText=`font-size:20px;padding:2px 6px;background:${playerOutfit===g.v?'#00ff8833':'transparent'};border:2px solid ${playerOutfit===g.v?'#00ff88':'#444'};cursor:pointer;border-radius:4px;line-height:1.2;`;
+    b.onclick=()=>{playerOutfit=g.v;saveChar();buildCharPicker();updatePreview();};
+    ob.appendChild(b);
+  });
+  // Hair buttons
+  const hb=document.getElementById('hairbtns'); if(!hb)return; hb.innerHTML='';
+  // Hair styles available to player (fringe=1 and ponytail=5 removed)
+  const HAIR_OPTIONS=[{label:'Short',idx:0},{label:'Spiky',idx:2},{label:'Long',idx:3},{label:'Bun',idx:4},{label:'Afro',idx:6}];
+  HAIR_OPTIONS.forEach(({label,idx})=>{
+    const b=document.createElement('button');
+    b.textContent=label;
+    b.style.cssText=`font-size:8px;padding:2px 5px;background:${playerHairStyle===idx?'#00ff88':'#222'};color:${playerHairStyle===idx?'#000':'#aaffcc'};border:1px solid #334;cursor:pointer;font-family:monospace;border-radius:2px;`;
+    b.onclick=()=>{playerHairStyle=idx;saveChar();buildCharPicker();updatePreview();};
+    hb.appendChild(b);
+  });
+}
+
+function updatePreview(){
+  const pc=document.getElementById('charpreview'); if(!pc)return;
+  const pctx=pc.getContext('2d');
+  pctx.clearRect(0,0,60,80);
+  pctx.fillStyle='#111';pctx.fillRect(0,0,60,80);
+  const r=Math.round,w=28,h=46,skin=SKIN_TONES[playerSkin].skin;
+  pctx.save();pctx.translate(16,12);
+  pctx.fillStyle='#333355';pctx.fillRect(r(w*0.21),r(h*0.78),r(w*0.21),r(h*0.3));pctx.fillRect(r(w*0.54),r(h*0.78),r(w*0.21),r(h*0.3));
+  pctx.fillStyle='#111';pctx.fillRect(r(w*0.125),r(h*0.975),r(w*0.33),3);pctx.fillRect(r(w*0.46),r(h*0.975),r(w*0.33),3);
+  if(playerOutfit==='dress'){pctx.fillStyle='#1a44aa';pctx.fillRect(r(w*0.15),r(h*0.72),r(w*0.7),r(h*0.14));}
+  else if(playerOutfit==='shorts'){pctx.fillStyle='#333355';pctx.fillRect(r(w*0.21),r(h*0.78),r(w*0.21),r(h*0.16));pctx.fillRect(r(w*0.54),r(h*0.78),r(w*0.21),r(h*0.16));}
+  pctx.fillStyle='#2255cc';pctx.fillRect(r(w*0.21),r(h*0.4),r(w*0.58),r(h*0.4));
+  pctx.fillStyle='#2255cc';pctx.fillRect(r(w*0.08),r(h*0.44),3,r(h*0.25));pctx.fillRect(r(w*0.75),r(h*0.44),3,r(h*0.25));
+  pctx.fillStyle=skin;pctx.fillRect(r(w*0.04),r(h*0.66),4,4);pctx.fillRect(r(w*0.75),r(h*0.66),4,4);
+  const hx=r(w*0.21),hy=r(h*0.1),hw=r(w*0.58),hh=r(h*0.32);
+  pctx.fillStyle=skin;pctx.fillRect(hx,hy,hw,hh);
+  pctx.fillStyle='#3a2a10';
+  const hs=playerHairStyle;
+  if(hs===0){pctx.fillRect(hx,hy,hw,r(hh*0.32));pctx.fillRect(hx-1,hy,2,r(hh*0.55));pctx.fillRect(hx+hw-1,hy,2,r(hh*0.55));}
+  else if(hs===1){pctx.fillRect(hx,hy,hw,r(hh*0.36));pctx.fillRect(hx,hy,r(hw*0.5),r(hh*0.56));}
+  else if(hs===2){pctx.fillRect(hx,hy,hw,r(hh*0.24));for(let s=0;s<5;s++)pctx.fillRect(hx+r(hw*0.06)+s*r(hw*0.18),hy-r(hh*0.18),r(hw*0.10),r(hh*0.2));}
+  else if(hs===3){pctx.fillRect(hx,hy,hw,r(hh*0.3));pctx.fillRect(hx-2,hy,3,r(hh*0.88));pctx.fillRect(hx+hw-1,hy,3,r(hh*0.88));}
+  else if(hs===4){pctx.fillRect(hx,hy,hw,r(hh*0.28));pctx.fillRect(hx-1,hy,2,r(hh*0.5));pctx.fillRect(hx+hw-1,hy,2,r(hh*0.5));pctx.fillRect(hx+r(hw*0.3),hy-r(hh*0.22),r(hw*0.4),r(hh*0.26));}
+  else if(hs===5){pctx.fillRect(hx,hy,hw,r(hh*0.3));pctx.fillRect(hx-1,hy,2,r(hh*0.6));pctx.fillRect(hx+hw-1,hy,2,r(hh*0.6));pctx.fillRect(hx+hw-2,hy+r(hh*0.2),4,r(hh*0.55));}
+  else if(hs===6){pctx.fillRect(hx-3,hy-r(hh*0.22),hw+6,r(hh*0.52));pctx.fillRect(hx-3,hy,4,r(hh*0.5));pctx.fillRect(hx+hw-1,hy,4,r(hh*0.5));}
+  pctx.fillStyle='#fff';pctx.fillRect(hx+r(hw*0.14),hy+r(hh*0.38),3,3);pctx.fillRect(hx+r(hw*0.55),hy+r(hh*0.38),3,3);
+  pctx.fillStyle='#223388';pctx.fillRect(hx+r(hw*0.19),hy+r(hh*0.44),2,2);pctx.fillRect(hx+r(hw*0.60),hy+r(hh*0.44),2,2);
+  pctx.strokeStyle='#888';pctx.lineWidth=1;pctx.strokeRect(hx+r(hw*0.08),hy+r(hh*0.33),4,4);pctx.strokeRect(hx+r(hw*0.49),hy+r(hh*0.33),4,4);
+  pctx.restore();
+}
+
+buildCharPicker();
+updatePreview();
 </script>
 </body>
 </html>
