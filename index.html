@@ -803,7 +803,7 @@ function updatePlayer(){
           spawnT(e.x,e.y-12,(combo>1?'x'+combo+'! ':'')+'+'+pts,'#ffaa00');
           setMsg(combo>2?'🔥 x'+combo+' COMBO! '+EN_MSGS[Math.floor(Math.random()*EN_MSGS.length)]:EN_MSGS[Math.floor(Math.random()*EN_MSGS.length)]);
           // Schedule respawn (students only, not in boss hallway)
-          if(e.type==='student'){e.respawnTimer=300+level*60;}
+          if(e.type==='student'){e.dead=true;}
         } else {
           e.stunned=true;e.stunTimer=90;
           spawnT(e.x,e.y-12,'STUNNED!','#ffdd00');
@@ -830,19 +830,7 @@ function takeDmg(amt){
 function updateEnemies(){
   if(ld.isBoss||paused)return;
   for(const e of ld.enemies){
-    // Respawn countdown
-    if(e.respawnTimer>0){
-      e.respawnTimer--;
-      if(e.respawnTimer===0){
-        // Respawn off-screen in direction player came from
-        e.dead=false; e.hp=e.type==='teacher'?2:1;
-        e.x=e.spawnX; e.y=e.spawnY; e.vy=0;
-        e.vx=-e.baseSpd; e.facing=-1;
-        e.stunned=false; e.stunTimer=0;
-        spawnP(e.x+e.w/2,e.y,6,['#aaffcc','#00ff88'],2,30);
-      }
-      continue;
-    }
+    // Skip dead enemies
     if(e.dead)continue;
     if(e.stunned){e.stunTimer--;if(e.stunTimer<=0)e.stunned=false;e.vy+=GRAVITY();e.y+=e.vy;resolveP(e);continue;}
 
