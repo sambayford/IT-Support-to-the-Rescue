@@ -143,7 +143,7 @@ const SFX={
 
 // ═══ CANVAS SETUP (responsive) ════════════════════════════════
 const canvas=document.getElementById('gamecanvas');
-const ctx=canvas.getContext('2d');
+let ctx=canvas.getContext('2d');
 let W=500,H=400,TILE=32,FLOOR_OFFSET=0;
 
 function resizeGame(){
@@ -1385,80 +1385,77 @@ function drawBody(w,h,bob,leg,o){
   const outfit=o.outfit||'trousers'; // 'trousers' | 'shorts' | 'dress'
 
   if(outfit==='dress'){
-    // Bare legs (skin coloured)
     ctx.fillStyle=skin;
     ctx.fillRect(r(w*0.21),r(h*0.78+bob),r(w*0.21),r(h*0.3-leg*3));
     ctx.fillRect(r(w*0.54),r(h*0.78+bob),r(w*0.21),r(h*0.3+leg*3));
-    // Shoes
     ctx.fillStyle=o.shoes;
-    ctx.fillRect(r(w*0.125),r(h*0.975+bob-leg*3),r(w*0.33),4);
-    ctx.fillRect(r(w*0.46), r(h*0.975+bob+leg*3),r(w*0.33),4);
-    // Dress body (covers torso + skirt)
+    ctx.fillRect(r(w*0.125),r(h*0.78+bob+(h*0.3-leg*3)),r(w*0.33),4);
+    ctx.fillRect(r(w*0.46),r(h*0.78+bob+(h*0.3+leg*3)),r(w*0.33),4);
     ctx.fillStyle=o.shirt;
     ctx.fillRect(r(w*0.18),r(h*0.4+bob),r(w*0.64),r(h*0.45));
     ctx.fillRect(r(w*0.14),r(h*0.72+bob),r(w*0.72),r(h*0.1));
-    // Bare arms (skin)
-    ctx.fillStyle=skin;
-    ctx.fillRect(r(w*0.06),r(h*0.44+bob+leg*2),4,r(h*0.28));
-    ctx.fillRect(r(w*0.77),r(h*0.44+bob-leg*2),4,r(h*0.28));
-    ctx.fillRect(r(w*0.02),r(h*0.69+bob+leg*2),5,5);
-    ctx.fillRect(r(w*0.77),r(h*0.69+bob-leg*2),5,5);
+    if(!o.fixing){
+      ctx.fillStyle=skin;
+      ctx.fillRect(r(w*0.06),r(h*0.44+bob+leg*2),4,r(h*0.28));
+      ctx.fillRect(r(w*0.77),r(h*0.44+bob-leg*2),4,r(h*0.28));
+      ctx.fillRect(r(w*0.02),r(h*0.69+bob+leg*2),5,5);
+      ctx.fillRect(r(w*0.77),r(h*0.69+bob-leg*2),5,5);
+    }
   } else if(outfit==='shorts'){
-    // Shorts — short pants (skin below knee)
     ctx.fillStyle=o.pants;
     ctx.fillRect(r(w*0.21),r(h*0.78+bob),r(w*0.21),r(h*0.16-leg*1.5));
     ctx.fillRect(r(w*0.54),r(h*0.78+bob),r(w*0.21),r(h*0.16+leg*1.5));
-    // Bare lower legs
     ctx.fillStyle=skin;
     ctx.fillRect(r(w*0.21),r(h*0.88+bob-leg*1.5),r(w*0.21),r(h*0.14));
     ctx.fillRect(r(w*0.54),r(h*0.88+bob+leg*1.5),r(w*0.21),r(h*0.14));
-    // Shoes
     ctx.fillStyle=o.shoes;
-    ctx.fillRect(r(w*0.125),r(h*0.975+bob-leg*3),r(w*0.33),4);
-    ctx.fillRect(r(w*0.46), r(h*0.975+bob+leg*3),r(w*0.33),4);
-    if(o.shoeStripe){ctx.fillStyle=o.shoeStripe;ctx.fillRect(r(w*0.125),r(h*0.975+bob-leg*3),r(w*0.33),1);ctx.fillRect(r(w*0.46),r(h*0.975+bob+leg*3),r(w*0.33),1);}
-    // T-shirt body (shorter)
+    ctx.fillRect(r(w*0.125),r(h*0.78+bob+(h*0.3-leg*3)),r(w*0.33),4);
+    ctx.fillRect(r(w*0.46),r(h*0.78+bob+(h*0.3+leg*3)),r(w*0.33),4);
+    if(o.shoeStripe){ctx.fillStyle=o.shoeStripe;ctx.fillRect(r(w*0.125),r(h*0.78+bob+(h*0.3-leg*3)+3),r(w*0.33),1);ctx.fillRect(r(w*0.46),r(h-3+bob+r(leg*3)),r(w*0.33),1);}
     ctx.fillStyle=o.shirt;
     ctx.fillRect(r(w*0.21),r(h*0.45+bob),r(w*0.58),r(h*0.34));
-    // Bare arms
-    ctx.fillStyle=skin;
-    ctx.fillRect(r(w*0.08),r(h*0.44+bob+leg*2),4,r(h*0.28));
-    ctx.fillRect(r(w*0.75),r(h*0.44+bob-leg*2),4,r(h*0.28));
-    ctx.fillRect(r(w*0.04),r(h*0.69+bob+leg*2),5,5);
-    ctx.fillRect(r(w*0.75),r(h*0.69+bob-leg*2),5,5);
-    if(o.phone){ctx.fillStyle='#111';ctx.fillRect(r(w*0.76),r(h*0.62+bob-leg*2),5,7);ctx.fillStyle='#5599ff';ctx.fillRect(r(w*0.77),r(h*0.63+bob-leg*2),3,5);}
-    if(o.papers){ctx.fillStyle='#eee';ctx.fillRect(r(w*0.75),r(h*0.55+bob-leg*2),6,8);ctx.fillStyle='#bbb';ctx.fillRect(r(w*0.76),r(h*0.57+bob-leg*2),4,1);ctx.fillRect(r(w*0.76),r(h*0.60+bob-leg*2),4,1);}
+    if(!o.fixing){
+      ctx.fillStyle=skin;
+      ctx.fillRect(r(w*0.08),r(h*0.44+bob+leg*2),4,r(h*0.28));
+      ctx.fillRect(r(w*0.75),r(h*0.44+bob-leg*2),4,r(h*0.28));
+      ctx.fillRect(r(w*0.04),r(h*0.69+bob+leg*2),5,5);
+      ctx.fillRect(r(w*0.75),r(h*0.69+bob-leg*2),5,5);
+      if(o.phone){ctx.fillStyle='#111';ctx.fillRect(r(w*0.76),r(h*0.62+bob-leg*2),5,7);ctx.fillStyle='#5599ff';ctx.fillRect(r(w*0.77),r(h*0.63+bob-leg*2),3,5);}
+      if(o.papers){ctx.fillStyle='#eee';ctx.fillRect(r(w*0.75),r(h*0.55+bob-leg*2),6,8);ctx.fillStyle='#bbb';ctx.fillRect(r(w*0.76),r(h*0.57+bob-leg*2),4,1);ctx.fillRect(r(w*0.76),r(h*0.60+bob-leg*2),4,1);}
+    }
   } else {
-    // Trousers — long pants and long-sleeved shirt
     ctx.fillStyle=o.pants;
     ctx.fillRect(r(w*0.21),r(h*0.78+bob),r(w*0.21),r(h*0.3-leg*3));
     ctx.fillRect(r(w*0.54),r(h*0.78+bob),r(w*0.21),r(h*0.3+leg*3));
     ctx.fillStyle=o.shoes;
-    ctx.fillRect(r(w*0.125),r(h*0.975+bob-leg*3),r(w*0.33),4);
-    ctx.fillRect(r(w*0.46), r(h*0.975+bob+leg*3),r(w*0.33),4);
-    if(o.shoeStripe){ctx.fillStyle=o.shoeStripe;ctx.fillRect(r(w*0.125),r(h*0.975+bob-leg*3),r(w*0.33),1);ctx.fillRect(r(w*0.46),r(h*0.975+bob+leg*3),r(w*0.33),1);}
-    // Long-sleeved shirt
+    ctx.fillRect(r(w*0.125),r(h*0.78+bob+(h*0.3-leg*3)),r(w*0.33),4);
+    ctx.fillRect(r(w*0.46),r(h*0.78+bob+(h*0.3+leg*3)),r(w*0.33),4);
+    if(o.shoeStripe){ctx.fillStyle=o.shoeStripe;ctx.fillRect(r(w*0.125),r(h*0.78+bob+(h*0.3-leg*3)+3),r(w*0.33),1);ctx.fillRect(r(w*0.46),r(h-3+bob+r(leg*3)),r(w*0.33),1);}
     ctx.fillStyle=o.shirt;
     ctx.fillRect(r(w*0.21),r(h*0.4+bob),r(w*0.58),r(h*0.4));
-    // Long sleeves (shirt colour to wrist)
-    ctx.fillStyle=o.shirt;
-    ctx.fillRect(r(w*0.08),r(h*0.44+bob+leg*2),4,r(h*0.25));
-    ctx.fillRect(r(w*0.75),r(h*0.44+bob-leg*2),4,r(h*0.25));
-    ctx.fillStyle=skin;
-    ctx.fillRect(r(w*0.04),r(h*0.66+bob+leg*2),5,5);
-    ctx.fillRect(r(w*0.75),r(h*0.66+bob-leg*2),5,5);
-    if(o.phone){ctx.fillStyle='#111';ctx.fillRect(r(w*0.76),r(h*0.62+bob-leg*2),5,7);ctx.fillStyle='#5599ff';ctx.fillRect(r(w*0.77),r(h*0.63+bob-leg*2),3,5);}
-    if(o.papers){ctx.fillStyle='#eee';ctx.fillRect(r(w*0.75),r(h*0.55+bob-leg*2),6,8);ctx.fillStyle='#bbb';ctx.fillRect(r(w*0.76),r(h*0.57+bob-leg*2),4,1);ctx.fillRect(r(w*0.76),r(h*0.60+bob-leg*2),4,1);}
+    if(!o.fixing){
+      ctx.fillStyle=o.shirt;
+      ctx.fillRect(r(w*0.08),r(h*0.44+bob+leg*2),4,r(h*0.25));
+      ctx.fillRect(r(w*0.75),r(h*0.44+bob-leg*2),4,r(h*0.25));
+      ctx.fillStyle=skin;
+      ctx.fillRect(r(w*0.04),r(h*0.66+bob+leg*2),5,5);
+      ctx.fillRect(r(w*0.75),r(h*0.66+bob-leg*2),5,5);
+      if(o.phone){ctx.fillStyle='#111';ctx.fillRect(r(w*0.76),r(h*0.62+bob-leg*2),5,7);ctx.fillStyle='#5599ff';ctx.fillRect(r(w*0.77),r(h*0.63+bob-leg*2),3,5);}
+      if(o.papers){ctx.fillStyle='#eee';ctx.fillRect(r(w*0.75),r(h*0.55+bob-leg*2),6,8);ctx.fillStyle='#bbb';ctx.fillRect(r(w*0.76),r(h*0.57+bob-leg*2),4,1);ctx.fillRect(r(w*0.76),r(h*0.60+bob-leg*2),4,1);}
+    }
   }
 
   // Fixing animation override arms
-  // Fixing — only right arm extends with screwdriver, no extra left arm
+  // Fixing — both arms raised, screwdriver in right hand
   if(o.fixing){
-    ctx.fillStyle=o.outfit==='trousers'?o.shirt:skin;
-    ctx.fillRect(r(w*0.75),r(h*0.44+bob),4,r(h*0.25)); // right arm reaching out
-    ctx.fillStyle=skin;ctx.fillRect(r(w*0.79),r(h*0.64+bob),5,5); // hand
-    ctx.fillStyle='#ffaa00';ctx.fillRect(r(w*1.0),r(h*0.62+bob),3,8); // screwdriver
-    ctx.fillStyle='#888';ctx.fillRect(r(w*1.04),r(h*0.72+bob),2,5); // tip
+    const armCol=o.outfit==='trousers'?o.shirt:skin;
+    ctx.fillStyle=armCol;
+    ctx.fillRect(-4,r(h*0.44+bob),8,5);           // left arm out
+    ctx.fillRect(r(w*0.79),r(h*0.44+bob),8,5);    // right arm out
+    ctx.fillStyle=skin;
+    ctx.fillRect(-6,r(h*0.44+bob),4,4);            // left hand
+    ctx.fillStyle='#ffaa00';ctx.fillRect(r(w*1.0),r(h*0.42+bob),3,8);  // screwdriver
+    ctx.fillStyle='#888';ctx.fillRect(r(w*1.04),r(h*0.54+bob),2,5);    // tip
   }
   // Bag
   if(o.bag){
@@ -1740,32 +1737,29 @@ function buildCharPicker(){
 function updatePreview(){
   const pc=document.getElementById('charpreview'); if(!pc)return;
   const pctx=pc.getContext('2d');
-  pctx.clearRect(0,0,60,80);
-  pctx.fillStyle='#111';pctx.fillRect(0,0,60,80);
-  const r=Math.round,w=28,h=46,skin=SKIN_TONES[playerSkin].skin;
-  pctx.save();pctx.translate(16,12);
-  pctx.fillStyle='#333355';pctx.fillRect(r(w*0.21),r(h*0.78),r(w*0.21),r(h*0.3));pctx.fillRect(r(w*0.54),r(h*0.78),r(w*0.21),r(h*0.3));
-  pctx.fillStyle='#111';pctx.fillRect(r(w*0.125),r(h*0.975),r(w*0.33),3);pctx.fillRect(r(w*0.46),r(h*0.975),r(w*0.33),3);
-  if(playerOutfit==='dress'){pctx.fillStyle='#1a44aa';pctx.fillRect(r(w*0.15),r(h*0.72),r(w*0.7),r(h*0.14));}
-  else if(playerOutfit==='shorts'){pctx.fillStyle='#333355';pctx.fillRect(r(w*0.21),r(h*0.78),r(w*0.21),r(h*0.16));pctx.fillRect(r(w*0.54),r(h*0.78),r(w*0.21),r(h*0.16));}
-  pctx.fillStyle='#2255cc';pctx.fillRect(r(w*0.21),r(h*0.4),r(w*0.58),r(h*0.4));
-  pctx.fillStyle='#2255cc';pctx.fillRect(r(w*0.08),r(h*0.44),3,r(h*0.25));pctx.fillRect(r(w*0.75),r(h*0.44),3,r(h*0.25));
-  pctx.fillStyle=skin;pctx.fillRect(r(w*0.04),r(h*0.66),4,4);pctx.fillRect(r(w*0.75),r(h*0.66),4,4);
-  const hx=r(w*0.21),hy=r(h*0.1),hw=r(w*0.58),hh=r(h*0.32);
-  pctx.fillStyle=skin;pctx.fillRect(hx,hy,hw,hh);
-  pctx.fillStyle='#3a2a10';
-  const hs=playerHairStyle;
-  if(hs===0){pctx.fillRect(hx,hy,hw,r(hh*0.32));pctx.fillRect(hx-1,hy,2,r(hh*0.55));pctx.fillRect(hx+hw-1,hy,2,r(hh*0.55));}
-  else if(hs===1){pctx.fillRect(hx,hy,hw,r(hh*0.36));pctx.fillRect(hx,hy,r(hw*0.5),r(hh*0.56));}
-  else if(hs===2){pctx.fillRect(hx,hy,hw,r(hh*0.24));for(let s=0;s<5;s++)pctx.fillRect(hx+r(hw*0.06)+s*r(hw*0.18),hy-r(hh*0.18),r(hw*0.10),r(hh*0.2));}
-  else if(hs===3){pctx.fillRect(hx,hy,hw,r(hh*0.3));pctx.fillRect(hx-2,hy,3,r(hh*0.88));pctx.fillRect(hx+hw-1,hy,3,r(hh*0.88));}
-  else if(hs===4){pctx.fillRect(hx,hy,hw,r(hh*0.28));pctx.fillRect(hx-1,hy,2,r(hh*0.5));pctx.fillRect(hx+hw-1,hy,2,r(hh*0.5));pctx.fillRect(hx+r(hw*0.3),hy-r(hh*0.22),r(hw*0.4),r(hh*0.26));}
-  else if(hs===5){pctx.fillRect(hx,hy,hw,r(hh*0.3));pctx.fillRect(hx-1,hy,2,r(hh*0.6));pctx.fillRect(hx+hw-1,hy,2,r(hh*0.6));pctx.fillRect(hx+hw-2,hy+r(hh*0.2),4,r(hh*0.55));}
-  else if(hs===6){pctx.fillRect(hx-3,hy-r(hh*0.22),hw+6,r(hh*0.52));pctx.fillRect(hx-3,hy,4,r(hh*0.5));pctx.fillRect(hx+hw-1,hy,4,r(hh*0.5));}
-  pctx.fillStyle='#fff';pctx.fillRect(hx+r(hw*0.14),hy+r(hh*0.38),3,3);pctx.fillRect(hx+r(hw*0.55),hy+r(hh*0.38),3,3);
-  pctx.fillStyle='#223388';pctx.fillRect(hx+r(hw*0.19),hy+r(hh*0.44),2,2);pctx.fillRect(hx+r(hw*0.60),hy+r(hh*0.44),2,2);
-  pctx.strokeStyle='#888';pctx.lineWidth=1;pctx.strokeRect(hx+r(hw*0.08),hy+r(hh*0.33),4,4);pctx.strokeRect(hx+r(hw*0.49),hy+r(hh*0.33),4,4);
+  pctx.clearRect(0,0,44,60);
+  pctx.fillStyle='#111';pctx.fillRect(0,0,44,60);
+
+  // drawBody uses the global ctx — point it at the preview canvas temporarily
+  const realCtx=ctx;
+  ctx=pctx;
+
+  const pw=26,ph=44;
+  const realIdle=idleTimer; idleTimer=0; // prevent blink in preview
+  pctx.save();
+  pctx.translate(9,8);
+  try{
+    drawBody(pw,ph,0,0,{
+      shirt:'#2255cc',pants:'#333355',shoes:'#111',shoeStripe:null,
+      skin:SKIN_TONES[playerSkin].skin,outfit:playerOutfit,
+      hair:'#3a2a10',hairStyle:playerHairStyle,eye:'#223388',
+      glasses:true,lanyard:playerOutfit==='trousers',bag:false,
+      phone:false,papers:false,fixing:false,coffeeGlow:false,
+    });
+  }catch(e){}
   pctx.restore();
+  idleTimer=realIdle;
+  ctx=realCtx;
 }
 
 buildCharPicker();
