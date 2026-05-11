@@ -31,7 +31,7 @@ step, no dependencies (just a Google Fonts CDN).
 
 ## Browser support
 
-Any chromium based browser or Safari. Tested in Chrome, Edge, Brave and Safari. Uses standard Canvas 2D and Web Audio APIs.
+Any modern browser. Tested in Chrome, Edge, Brave and Safari. Uses standard Canvas 2D and Web Audio APIs.
 
 ## Licence
 
