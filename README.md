@@ -46,7 +46,7 @@ python3 -m http.server 8000
 
 ## Browser support
 
-Any chromium based browser or Safari. Tested in Chrome, Edge, Brave, Safari (macOS / iOS). Uses standard Canvas 2D and Web Audio APIs.
+Any chromium based browser or Safari. Tested in Chrome, Edge, Brave and Safari. Uses standard Canvas 2D and Web Audio APIs.
 
 ## Licence
 
