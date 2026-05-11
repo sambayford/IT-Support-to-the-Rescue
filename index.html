@@ -53,37 +53,53 @@
 </div>
 
 <div id="overlay">
-  <h1>💻 IT'S A GAME</h1>
-  <p>You are the school's lone IT technician. Broken printers, offline cameras, dead phones and crashed PCs are scattered across every hallway — and the students are making things worse.<br><br>
-  Race through the school fixing every device before time runs out. Stomp students to get past them, and watch out for teachers who will chase you down.<br><br>
-  🔧 Walk into broken devices to fix them<br>
-  👟 Jump ON enemies from above to stomp them<br>
-  🪜 Jump onto locker tops to reach devices on platforms<br>
-  🪟 Jump from lockers to window sills, then to ceiling lights<br>
-  ☕ Grab power-ups &nbsp; ⚠️ Boss every 10th hallway<br>
-  P / ESC = pause &nbsp; Arrow Keys / WASD + Space</p>
-  <div id="charpicker" style="display:flex;flex-direction:column;align-items:center;gap:5px;width:100%;">
-    <div style="color:#ffdd00;font-family:'Press Start 2P',monospace;font-size:8px;">CUSTOMISE YOUR TECH</div>
-    <div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap;justify-content:center;">
-      <canvas id="charpreview" width="44" height="60" style="image-rendering:pixelated;background:#111;flex-shrink:0;"></canvas>
-      <div style="display:flex;flex-direction:column;gap:5px;">
-        <div style="display:flex;gap:4px;align-items:center;">
-          <span style="color:#aaffcc;font-family:monospace;font-size:11px;">Skin:</span>
-          <div id="skinbtns" style="display:flex;gap:3px;"></div>
+
+  <!-- SCREEN 1: Introduction -->
+  <div id="screen-intro" style="display:flex;flex-direction:column;align-items:center;gap:10px;width:100%;">
+    <h1>💻 IT'S A GAME</h1>
+    <p>You are the school's lone IT technician. Broken printers, offline cameras, dead phones and crashed PCs are scattered across every hallway — and the students are making things worse.<br><br>
+    Race through the school fixing every device before time runs out. Stomp students to get past them, and watch out for teachers who will chase you down.<br><br>
+    🔧 Walk into broken devices to fix them<br>
+    👟 Jump ON enemies from above to stomp them<br>
+    🪜 Jump onto locker tops to reach devices on platforms<br>
+    🪟 Jump from lockers to window sills, then to ceiling lights<br>
+    ☕ Grab power-ups &nbsp; ⚠️ Boss every 10th hallway<br>
+    P / ESC = pause &nbsp; Arrow Keys / WASD + Space</p>
+    <div id="hstable"></div>
+    <button id="btn-to-char" style="font-family:'Press Start 2P',monospace;font-size:10px;background:#00ff88;color:#000;border:none;padding:10px 24px;cursor:pointer;animation:blink 1s step-end infinite;">▶ NEXT</button>
+  </div>
+
+  <!-- SCREEN 2: Character design -->
+  <div id="screen-char" style="display:none;flex-direction:column;align-items:center;gap:10px;width:100%;">
+    <h1>👤 YOUR CHARACTER</h1>
+    <div id="charpicker" style="display:flex;flex-direction:column;align-items:center;gap:8px;width:100%;">
+      <canvas id="charpreview" width="66" height="90" style="image-rendering:pixelated;background:#111;"></canvas>
+      <div style="display:flex;flex-direction:column;gap:6px;align-items:flex-start;">
+        <div style="display:flex;gap:6px;align-items:center;">
+          <span style="color:#aaffcc;font-family:monospace;font-size:12px;min-width:50px;">Skin:</span>
+          <div id="skinbtns" style="display:flex;gap:4px;flex-wrap:wrap;"></div>
         </div>
-        <div style="display:flex;gap:4px;align-items:center;">
-          <span style="color:#aaffcc;font-family:monospace;font-size:11px;">Outfit:</span>
-          <div id="outfitbtns" style="display:flex;gap:3px;"></div>
+        <div style="display:flex;gap:6px;align-items:center;">
+          <span style="color:#aaffcc;font-family:monospace;font-size:12px;min-width:50px;">Outfit:</span>
+          <div id="outfitbtns" style="display:flex;gap:4px;"></div>
         </div>
-        <div style="display:flex;gap:4px;align-items:center;flex-wrap:wrap;">
-          <span style="color:#aaffcc;font-family:monospace;font-size:11px;">Hair:</span>
-          <div id="hairbtns" style="display:flex;gap:2px;flex-wrap:wrap;"></div>
+        <div style="display:flex;gap:6px;align-items:center;">
+          <span style="color:#aaffcc;font-family:monospace;font-size:12px;min-width:50px;">Colour:</span>
+          <div id="colourbtns" style="display:flex;gap:4px;flex-wrap:wrap;"></div>
+        </div>
+        <div style="display:flex;gap:6px;align-items:center;flex-wrap:wrap;">
+          <span style="color:#aaffcc;font-family:monospace;font-size:12px;min-width:50px;">Hair:</span>
+          <div id="hairbtns" style="display:flex;gap:3px;flex-wrap:wrap;"></div>
+        </div>
+        <div style="display:flex;gap:6px;align-items:center;">
+          <span style="color:#aaffcc;font-family:monospace;font-size:12px;min-width:50px;">Hair col:</span>
+          <div id="haircolbtns" style="display:flex;gap:4px;flex-wrap:wrap;"></div>
         </div>
       </div>
     </div>
+    <button id="startbtn" style="font-family:'Press Start 2P',monospace;font-size:10px;background:#00ff88;color:#000;border:none;padding:10px 24px;cursor:pointer;animation:blink 1s step-end infinite;">▶ START SHIFT</button>
   </div>
-  <button id="startbtn">▶ START SHIFT</button>
-  <div id="hstable"></div>
+
 </div>
 
 <!-- Touch controls: left arrow on left, jump+right on right -->
@@ -202,10 +218,12 @@ const SKIN_TONES=[
   {name:'Dark',    skin:'#4a2c17', shade:'#33180a'},
 ];
 // Player customisation (persisted)
-let playerSkin=0, playerOutfit='trousers', playerHairStyle=0;
+let playerSkin=0, playerOutfit='trousers', playerHairStyle=0, playerOutfitColor='#2255cc', playerHairColor='#3a2a10';
 try{
   const saved=JSON.parse(localStorage.getItem('itguy_char')||'{}');
-  playerSkin=saved.skin||0; playerOutfit=(['trousers','shorts','dress'].includes(saved.outfit)?saved.outfit:'trousers');
+  playerSkin=saved.skin||0; playerOutfit=(['trousers','dress'].includes(saved.outfit)?saved.outfit:'trousers');
+  playerOutfitColor=saved.outfitColor||'#2255cc';
+  playerHairColor=saved.hairColor||'#3a2a10';
   // Remap removed styles (1=fringe, 5=ponytail) to short (0)
   const removedStyles=[1,5];
   playerHairStyle=removedStyles.includes(saved.hair)?0:(saved.hair||0);
@@ -398,7 +416,7 @@ function genLevel(lvl){
         type: 'student',
         hoodieColor: HOODIE_COLS[i%4],
         skinIdx: Math.floor(rng()*SKIN_TONES.length),
-        outfit: ['trousers','shorts','dress'][Math.floor(rng()*3)],
+        outfit: ['trousers','dress'][Math.floor(rng()*2)],
         walkFrame:0, walkTimer:0,
         stunned:false, stunTimer:0, dead:false,
         patrol:{left:patLeft, right:safeRight},
@@ -419,7 +437,7 @@ function genLevel(lvl){
         type:'teacher',
         hoodieColor:'#665566',
         skinIdx: Math.floor(rng()*SKIN_TONES.length),
-        outfit: ['trousers','shorts','dress'][Math.floor(rng()*3)],
+        outfit: ['trousers','dress'][Math.floor(rng()*2)],
         walkFrame:0, walkTimer:0,
         stunned:false, stunTimer:0, dead:false,
         patrol:{left:teacherX-TILE*5, right:teacherX+TILE*5},
@@ -1526,9 +1544,9 @@ function drawPlayer(){
   else ctx.translate(sx,pl.y);
   const st=SKIN_TONES[playerSkin];
   drawBody(pl.w,pl.h,bob,leg,{
-    shirt:'#2255cc',pants:'#333355',shoes:'#111',shoeStripe:null,
+    shirt:playerOutfitColor,pants:'#333355',shoes:'#111',shoeStripe:null,
     skin:st.skin,outfit:playerOutfit,
-    hair:'#3a2a10',hairStyle:playerHairStyle,eye:'#223388',
+    hair:playerHairColor,hairStyle:playerHairStyle,eye:'#223388',
     glasses:true,lanyard:true,bag:false,phone:false,papers:false,
     fixing:pl.fixing,coffeeGlow:pl.coffeeTimer>0,
   });
@@ -1624,17 +1642,22 @@ function loop(){
 // ═══ MENUS ═══════════════════════════════════════════════════
 function showDeathScreen(){
   const ov=document.getElementById('overlay');
-  ov.querySelector('h1').textContent='💀 SYSTEM CRASH';
-  ov.querySelector('p').innerHTML='Score: '+score+'<br>Hallway reached: '+level+'<br>Total time: '+formatTime(totalFrames+zoneFrames)+'<br><br>Your IT ticket queue is overflowing.';
-  document.getElementById('startbtn').textContent='↺ REBOOT';
-  renderHS();ov.classList.remove('hidden');
+  ov.classList.remove('hidden');
+  showScreen('screen-intro');
+  document.getElementById('screen-intro').querySelector('h1').textContent='💀 SYSTEM CRASH';
+  document.getElementById('screen-intro').querySelector('p').innerHTML='Score: '+score+'<br>Hallway reached: '+level+'<br>Total time: '+formatTime(totalFrames+zoneFrames)+'<br><br>Your IT ticket queue is overflowing.';
+  document.getElementById('btn-to-char').textContent='↺ PLAY AGAIN';
+  renderHS();
 }
 function showMainMenu(){
   const ov=document.getElementById('overlay');
-  ov.querySelector('h1').innerHTML="💻 IT'S A GAME";
-  ov.querySelector('p').innerHTML='Students keep unplugging things, opening phishing emails and using the router as a footrest.<br><br>🔧 Walk into broken devices to fix them<br>👟 Jump ON enemies to stomp them<br>☕ Grab coffee, USB drives &amp; donuts<br>⚠️ Every 10th hallway: Face THE HEADTEACHER!<br><br>Arrow Keys / WASD — Move &amp; Jump (Space)';
+  ov.classList.remove('hidden');
+  showScreen('screen-intro');
+  document.getElementById('screen-intro').querySelector('h1').innerHTML="💻 IT'S A GAME";
+  document.getElementById('screen-intro').querySelector('p').innerHTML='You are the school\'s lone IT technician. Broken printers, offline cameras, dead phones and crashed PCs are scattered across every hallway — and the students are making things worse.<br><br>Race through the school fixing every device before time runs out. Stomp students to get past them, and watch out for teachers who will chase you down.<br><br>🔧 Walk into broken devices to fix them<br>👟 Jump ON enemies from above to stomp them<br>🪜 Jump onto locker tops to reach devices on platforms<br>🪟 Jump from lockers to window sills, then to ceiling lights<br>☕ Grab power-ups &nbsp; ⚠️ Boss every 10th hallway<br>P / ESC = pause &nbsp; Arrow Keys / WASD + Space';
+  document.getElementById('btn-to-char').textContent='▶ NEXT';
   document.getElementById('startbtn').textContent='▶ START SHIFT';
-  renderHS();ov.classList.remove('hidden');
+  renderHS();
 }
 
 // ═══ INPUT ════════════════════════════════════════════════════
@@ -1667,6 +1690,26 @@ function startGame(){
   initLevel();gameRunning=true;requestAnimationFrame(loop);
 }
 
+// Screen navigation
+function showScreen(id){
+  document.getElementById('screen-intro').style.display='none';
+  document.getElementById('screen-char').style.display='none';
+  const el=document.getElementById(id);
+  if(el) el.style.display='flex';
+}
+
+document.getElementById('btn-to-char').addEventListener('click',()=>{
+  try{gac().resume();}catch(e){}
+  const txt=document.getElementById('btn-to-char').textContent;
+  if(txt.includes('PLAY AGAIN')||txt.includes('REBOOT')){
+    level=1;score=0;totalFrames=0;zoneFrames=0;
+    document.getElementById('startbtn').textContent='▶ START SHIFT';
+  }
+  showScreen('screen-char');
+  buildCharPicker();
+  setTimeout(updatePreview,20); // wait for screen to be visible before drawing
+});
+
 document.getElementById('startbtn').addEventListener('click',()=>{
   try{gac().resume();}catch(e){}
   if(document.getElementById('startbtn').textContent.includes('REBOOT')){level=1;score=0;totalFrames=0;zoneFrames=0;}
@@ -1688,7 +1731,7 @@ tchBtn('tch-jump','Space');
 renderHS();
 
 // ═══ CHARACTER PICKER ════════════════════════════════════════
-function saveChar(){try{localStorage.setItem('itguy_char',JSON.stringify({skin:playerSkin,outfit:playerOutfit,hair:playerHairStyle}));}catch(e){}}
+function saveChar(){try{localStorage.setItem('itguy_char',JSON.stringify({skin:playerSkin,outfit:playerOutfit,hair:playerHairStyle,outfitColor:playerOutfitColor,hairColor:playerHairColor}));}catch(e){}}
 
 function buildCharPicker(){
   // Skin buttons
@@ -1702,12 +1745,22 @@ function buildCharPicker(){
   });
   // Outfit buttons
   const ob=document.getElementById('outfitbtns'); if(!ob)return; ob.innerHTML='';
-  [{v:'trousers',l:'👔',tip:'Long shirt & pants'},{v:'shorts',l:'🩳',tip:'T-shirt & shorts'},{v:'dress',l:'👗',tip:'Dress'}].forEach(g=>{
+  [{v:'trousers',l:'👔',tip:'Long shirt & pants'},{v:'dress',l:'👗',tip:'Dress'}].forEach(g=>{
     const b=document.createElement('button');
     b.textContent=g.l; b.title=g.tip;
     b.style.cssText=`font-size:20px;padding:2px 6px;background:${playerOutfit===g.v?'#00ff8833':'transparent'};border:2px solid ${playerOutfit===g.v?'#00ff88':'#444'};cursor:pointer;border-radius:4px;line-height:1.2;`;
     b.onclick=()=>{playerOutfit=g.v;saveChar();buildCharPicker();updatePreview();};
     ob.appendChild(b);
+  });
+  // Colour buttons
+  const cb=document.getElementById('colourbtns'); if(!cb)return; cb.innerHTML='';
+  const OUTFIT_COLS=['#2255cc','#cc2222','#22aa44','#cc8800','#882299','#226688','#cc4488','#444444','#ffffff'];
+  OUTFIT_COLS.forEach(col=>{
+    const b=document.createElement('button');
+    b.style.cssText=`width:20px;height:20px;background:${col};border:2px solid ${playerOutfitColor===col?'#00ff88':'#444'};cursor:pointer;border-radius:3px;`;
+    b.title=col;
+    b.onclick=()=>{playerOutfitColor=col;saveChar();buildCharPicker();updatePreview();};
+    cb.appendChild(b);
   });
   // Hair buttons
   const hb=document.getElementById('hairbtns'); if(!hb)return; hb.innerHTML='';
@@ -1720,34 +1773,76 @@ function buildCharPicker(){
     b.onclick=()=>{playerHairStyle=idx;saveChar();buildCharPicker();updatePreview();};
     hb.appendChild(b);
   });
-}
-
-function updatePreview(){
+  // Hair colour buttons
+  const hcb=document.getElementById('haircolbtns'); if(!hcb)return; hcb.innerHTML='';
+  const HAIR_COLS=['#1a0a00','#3a2a10','#222222','#888888','#cccccc','#cc8833','#cc2200','#cc44aa','#3366cc'];
+  HAIR_COLS.forEach(col=>{
+    const b=document.createElement('button');
+    b.style.cssText=`width:20px;height:20px;background:${col};border:2px solid ${playerHairColor===col?'#00ff88':'#444'};cursor:pointer;border-radius:50%;`;
+    b.title=col;
+    b.onclick=()=>{playerHairColor=col;saveChar();buildCharPicker();updatePreview();};
+    hcb.appendChild(b);
+  });
   const pc=document.getElementById('charpreview'); if(!pc)return;
   const pctx=pc.getContext('2d');
-  pctx.clearRect(0,0,44,60);
-  pctx.fillStyle='#111';pctx.fillRect(0,0,44,60);
+  const CW=66, CH=90;
+  pctx.clearRect(0,0,CW,CH);
+  pctx.fillStyle='#111';pctx.fillRect(0,0,CW,CH);
 
-  // drawBody uses the global ctx — point it at the preview canvas temporarily
-  const realCtx=ctx;
-  ctx=pctx;
+  const r=Math.round;
+  // Scale character to fill canvas with padding
+  const pad=6;
+  const w=CW-pad*2, h=CH-pad*2;
+  const ox=pad, oy=pad;
+  const skin=SKIN_TONES[playerSkin].skin;
+  const shirt=playerOutfitColor;
+  const pants='#333355';
+  const shoes='#111';
+  const hair=playerHairColor;
+  const hs=playerHairStyle;
 
-  const pw=26,ph=44;
-  const realIdle=idleTimer; idleTimer=0; // prevent blink in preview
-  pctx.save();
-  pctx.translate(9,8);
-  try{
-    drawBody(pw,ph,0,0,{
-      shirt:'#2255cc',pants:'#333355',shoes:'#111',shoeStripe:null,
-      skin:SKIN_TONES[playerSkin].skin,outfit:playerOutfit,
-      hair:'#3a2a10',hairStyle:playerHairStyle,eye:'#223388',
-      glasses:true,lanyard:playerOutfit==='trousers',bag:false,
-      phone:false,papers:false,fixing:false,coffeeGlow:false,
-    });
-  }catch(e){}
-  pctx.restore();
-  idleTimer=realIdle;
-  ctx=realCtx;
+  function fr(x,y,fw,fh){pctx.fillRect(ox+r(x),oy+r(y),Math.max(1,r(fw)),Math.max(1,r(fh)));}
+
+  // ── Legs & body ──────────────────────────────────────────────
+  if(playerOutfit==='dress'){
+    pctx.fillStyle=skin; fr(w*0.21,h*0.78,w*0.21,h*0.3); fr(w*0.54,h*0.78,w*0.21,h*0.3);
+    pctx.fillStyle=shoes; fr(w*0.125,h*0.78+h*0.3,w*0.33,3); fr(w*0.46,h*0.78+h*0.3,w*0.33,3);
+    pctx.fillStyle=shirt; fr(w*0.18,h*0.4,w*0.64,h*0.45); fr(w*0.14,h*0.72,w*0.72,h*0.1);
+    pctx.fillStyle=skin; fr(w*0.06,h*0.44,4,h*0.28); fr(w*0.77,h*0.44,4,h*0.28);
+  } else if(playerOutfit==='shorts'){
+    pctx.fillStyle=pants; fr(w*0.21,h*0.78,w*0.21,h*0.16); fr(w*0.54,h*0.78,w*0.21,h*0.16);
+    pctx.fillStyle=skin; fr(w*0.21,h*0.88,w*0.21,h*0.14); fr(w*0.54,h*0.88,w*0.21,h*0.14);
+    pctx.fillStyle=shoes; fr(w*0.125,h*0.78+h*0.3,w*0.33,3); fr(w*0.46,h*0.78+h*0.3,w*0.33,3);
+    pctx.fillStyle=shirt; fr(w*0.21,h*0.45,w*0.58,h*0.34);
+    pctx.fillStyle=skin; fr(w*0.08,h*0.44,4,h*0.28); fr(w*0.75,h*0.44,4,h*0.28);
+  } else {
+    pctx.fillStyle=pants; fr(w*0.21,h*0.78,w*0.21,h*0.3); fr(w*0.54,h*0.78,w*0.21,h*0.3);
+    pctx.fillStyle=shoes; fr(w*0.125,h*0.78+h*0.3,w*0.33,3); fr(w*0.46,h*0.78+h*0.3,w*0.33,3);
+    pctx.fillStyle=shirt; fr(w*0.21,h*0.4,w*0.58,h*0.4);
+    pctx.fillStyle=shirt; fr(w*0.08,h*0.44,4,h*0.25); fr(w*0.75,h*0.44,4,h*0.25);
+    pctx.fillStyle=skin; fr(w*0.04,h*0.66,5,5); fr(w*0.75,h*0.66,5,5);
+    pctx.fillStyle='#ff8800'; fr(w*0.46,h*0.41,2,h*0.12);
+    pctx.fillStyle='#ffaa44'; fr(w*0.38,h*0.52,5,4);
+  }
+
+  // ── Head & hair ──────────────────────────────────────────────
+  const hx=ox+r(w*0.21),hy=oy+r(h*0.1),hw=r(w*0.58),hh=r(h*0.32);
+  pctx.fillStyle=skin; pctx.fillRect(hx,hy,hw,hh);
+  pctx.fillStyle=hair;
+  if(hs===0){pctx.fillRect(hx,hy,hw,r(hh*0.32));pctx.fillRect(hx-1,hy,2,r(hh*0.55));pctx.fillRect(hx+hw-1,hy,2,r(hh*0.55));}
+  else if(hs===2){pctx.fillRect(hx,hy,hw,r(hh*0.24));for(let s=0;s<5;s++)pctx.fillRect(hx+r(hw*0.06)+s*r(hw*0.18),hy-r(hh*0.18),r(hw*0.10),r(hh*0.2));pctx.fillRect(hx-1,hy,2,r(hh*0.48));pctx.fillRect(hx+hw-1,hy,2,r(hh*0.48));}
+  else if(hs===3){pctx.fillRect(hx,hy,hw,r(hh*0.3));pctx.fillRect(hx-2,hy,4,r(hh*0.88));pctx.fillRect(hx+hw-2,hy,4,r(hh*0.88));}
+  else if(hs===4){pctx.fillRect(hx,hy,hw,r(hh*0.28));pctx.fillRect(hx-1,hy,3,r(hh*0.5));pctx.fillRect(hx+hw-2,hy,3,r(hh*0.5));pctx.fillRect(hx+r(hw*0.3),hy-r(hh*0.22),r(hw*0.4),r(hh*0.26));}
+  else if(hs===6){pctx.fillRect(hx-3,hy-r(hh*0.22),hw+6,r(hh*0.52));pctx.fillRect(hx-4,hy,5,r(hh*0.5));pctx.fillRect(hx+hw-1,hy,5,r(hh*0.5));}
+
+  // ── Eyes ─────────────────────────────────────────────────────
+  pctx.fillStyle='#fff'; pctx.fillRect(hx+r(hw*0.14),hy+r(hh*0.38),3,3); pctx.fillRect(hx+r(hw*0.55),hy+r(hh*0.38),3,3);
+  pctx.fillStyle='#223388'; pctx.fillRect(hx+r(hw*0.19),hy+r(hh*0.44),2,2); pctx.fillRect(hx+r(hw*0.60),hy+r(hh*0.44),2,2);
+
+  // ── Glasses ───────────────────────────────────────────────────
+  pctx.strokeStyle='#888'; pctx.lineWidth=1;
+  pctx.strokeRect(hx+r(hw*0.08),hy+r(hh*0.33),5,5); pctx.strokeRect(hx+r(hw*0.49),hy+r(hh*0.33),5,5);
+  pctx.beginPath(); pctx.moveTo(hx+r(hw*0.08)+5,hy+r(hh*0.37)); pctx.lineTo(hx+r(hw*0.49),hy+r(hh*0.37)); pctx.stroke();
 }
 
 buildCharPicker();
