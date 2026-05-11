@@ -25,24 +25,9 @@ step, no dependencies (just a Google Fonts CDN).
 - 👟 Jump on enemies' heads to stomp them. Touching them any other way costs
   HP.
 - ☕ Coffee gives you 5 seconds of turbo speed and faster fixes.
-- 💾 floppy disks, 🔌 ethernet cables and 📘 manuals are score pickups.
+- 💾 floppy disks, 🔌 power cables and 📘 manuals are score pickups.
 - 🍩 Donuts heal 1 HP.
 - ⚠️ Every 10th zone is a **boss zone** — face the Headteacher.
-
-## Local development
-
-It's a single static HTML file. Open it directly in a browser:
-
-```sh
-open index.html
-```
-
-…or serve it locally if you want to test on a phone:
-
-```sh
-python3 -m http.server 8000
-# then visit http://<your-mac-ip>:8000 from the phone
-```
 
 ## Browser support
 
