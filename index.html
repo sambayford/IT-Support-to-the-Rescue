@@ -1668,6 +1668,20 @@ function showMainMenu(){
 
 // ═══ INPUT ════════════════════════════════════════════════════
 document.addEventListener('keydown',e=>{
+  const overlay = document.getElementById('overlay');
+  if(!overlay.classList.contains('hidden')){
+    if(e.code==='Enter' || e.code==='Space'){
+      e.preventDefault();
+      const startBtn = document.getElementById('startbtn');
+      const nextBtn = document.getElementById('btn-to-char');
+      if(document.getElementById('screen-intro').style.display !== 'none'){
+        nextBtn.click();
+      } else {
+        startBtn.click();
+      }
+    }
+  }
+
   keys[e.code]=true;
   if(['Space','ArrowUp','ArrowDown','ArrowLeft','ArrowRight'].includes(e.code))e.preventDefault();
   if(e.code==='KeyR'&&!gameRunning&&pl.dead){level=1;score=0;totalFrames=0;zoneFrames=0;pl.hp=MAX_HP;pl.dead=false;startGame();}
@@ -1691,8 +1705,7 @@ canvas.addEventListener('touchend',e=>{e.preventDefault();if(zDone)handleContinu
 
 function startGame(){
   document.getElementById('overlay').classList.add('hidden');
-  const hasTouchScreen = navigator.maxTouchPoints > 0 || 'ontouchstart' in window;
-  document.getElementById('touchpad').style.display = hasTouchScreen ? 'flex' : 'none';
+  document.getElementById('touchpad').style.display='flex';
   document.getElementById('gamecanvas').style.borderColor='#00ff88';
   initLevel();gameRunning=true;requestAnimationFrame(loop);
 }
