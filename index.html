@@ -97,6 +97,10 @@
         </div>
       </div>
     </div>
+    <div id="settings-row" style="display:flex;gap:16px;flex-wrap:wrap;justify-content:center;width:100%;max-width:600px;padding:0 16px;">
+      <div style="display:flex;gap:8px;align-items:center;"><span style="color:#aaffcc;font-family:monospace;font-size:clamp(13px,2vw,16px);min-width:70px;">Difficulty:</span><div id="diffbtns" style="display:flex;gap:6px;"></div></div>
+      <div style="display:flex;gap:8px;align-items:center;"><span style="color:#aaffcc;font-family:monospace;font-size:clamp(13px,2vw,16px);min-width:70px;">Controls:</span><div id="ctrlbtns" style="display:flex;gap:6px;"></div></div>
+    </div>
     <div id="hstable"></div>
     <button id="startbtn">▶ START SHIFT</button>
   </div>
@@ -266,6 +270,7 @@ let idleTimer=0;        // frames player has been still (for idle animation)
 let idleFrame=0;        // idle anim sub-frame
 try{highScores=JSON.parse(localStorage.getItem('itguy_hs')||'[]');}catch(e){}
 try{difficulty=localStorage.getItem('itguy_diff')||'normal';}catch(e){}
+let useTouch=false;try{useTouch=localStorage.getItem('itguy_touch')==='1';}catch(e){}
 
 // ═══ MESSAGES ════════════════════════════════════════════════
 const DEV_MSGS={
@@ -355,16 +360,19 @@ function genLevel(lvl){
   prevRightEdge = pcs[0].x + firstW;
 
   while(pcs.length < targetCount){
-    const gapFraction = 0.25 + rng() * 0.65;
-    const gap  = Math.round(gapFraction * MAX_GAP);
-    const px   = prevRightEdge + gap;
-    if(px >= lw - 200) break;
     const prevIdx = tiers.indexOf(prevH) === -1 ? 0 : tiers.indexOf(prevH);
     const minIdx  = Math.max(0, prevIdx - 1);
     const maxIdx  = Math.min(tiers.length - 1, prevIdx + 1);
     const tierIdx = minIdx + Math.floor(rng() * (maxIdx - minIdx + 1));
     const py = tiers[tierIdx];
     prevH = py;
+    // Same-tier platforms must be far enough apart that the player must jump
+    const sameTier = tierIdx === prevIdx;
+    const minGap = sameTier ? Math.round(MAX_GAP * 0.65) : Math.round(MAX_GAP * 0.25);
+    const gapFraction = 0.25 + rng() * 0.65;
+    const gap = Math.max(minGap, Math.round(gapFraction * MAX_GAP));
+    const px = prevRightEdge + gap;
+    if(px >= lw - 200) break;
     // Low platforms are always exactly 3 lockers wide; mid/high vary
     const pw = tierNames[tierIdx]==='low' ? PLAT_LOW_WIDTH : Math.max(PLAT_LOW_WIDTH, TILE * (2 + Math.floor(rng() * 4)));
     pcs.push({x:px, y:py, w:pw, tier:tierNames[tierIdx]});
@@ -1635,7 +1643,6 @@ function drawHUD(){
     ctx.fillStyle='#aaffcc';ctx.font=sf+'px "Press Start 2P"';
     ctx.fillText('SPACE / P — Resume',W/2,H*0.52);
     ctx.fillText('Difficulty: '+difficulty.toUpperCase(),W/2,H*0.62);
-    ctx.fillText('E — Easy  N — Normal  H — Hard',W/2,H*0.72);
     ctx.textAlign='left';
   }
 
@@ -1715,9 +1722,7 @@ canvas.addEventListener('touchend',e=>{e.preventDefault();if(zDone)handleContinu
 
 function startGame(){
   document.getElementById('overlay').classList.add('hidden');
-  const hasTouchScreen = window.matchMedia('(pointer: coarse)').matches && window.matchMedia('(hover: none)').matches;
-  touchUIVisible = hasTouchScreen;
-  document.getElementById('touchpad').style.display = hasTouchScreen ? 'flex' : 'none';
+  document.getElementById('touchpad').style.display=useTouch?'flex':'none';
   document.getElementById('gamecanvas').style.borderColor='#00ff88';
   initLevel();gameRunning=true;requestAnimationFrame(loop);
 }
@@ -1759,18 +1764,6 @@ function tchBtn(id,code){
 tchBtn('tch-left','ArrowLeft');
 tchBtn('tch-right','ArrowRight');
 tchBtn('tch-jump','Space');
-
-// ═══ AUTO-HIDE / AUTO-SHOW TOUCH CONTROLS ═══════════════════════════
-let touchUIVisible = window.matchMedia('(pointer: coarse)').matches && window.matchMedia('(hover: none)').matches;
-document.addEventListener('keydown', function(e){
-  if(['Shift','Control','Alt','Meta'].includes(e.key)) return;
-  if(touchUIVisible){ touchUIVisible=false; document.getElementById('touchpad').style.display='none'; }
-}, {capture:true});
-document.addEventListener('touchstart', function(){
-  const isTouch = window.matchMedia('(pointer: coarse)').matches && window.matchMedia('(hover: none)').matches;
-  if(isTouch && !touchUIVisible){ touchUIVisible=true; document.getElementById('touchpad').style.display='flex'; }
-}, {capture:true, passive:true});
-
 
 renderHS();
 
@@ -1827,6 +1820,24 @@ function buildCharPicker(){
     b.onclick=()=>{playerHairColor=col;saveChar();buildCharPicker();updatePreview();};
     hcb.appendChild(b);
   });
+  // Difficulty buttons
+  const db=document.getElementById('diffbtns'); if(db){db.innerHTML='';
+  [{v:'easy',l:'Easy'},{v:'normal',l:'Normal'},{v:'hard',l:'Hard'}].forEach(d=>{
+    const b=document.createElement('button');
+    b.textContent=d.l;
+    b.style.cssText=`font-size:11px;padding:5px 12px;background:${difficulty===d.v?'#00ff88':'#222'};color:${difficulty===d.v?'#000':'#aaffcc'};border:1px solid #334;cursor:pointer;font-family:monospace;border-radius:2px;`;
+    b.onclick=()=>{difficulty=d.v;try{localStorage.setItem('itguy_diff',d.v);}catch(x){}buildCharPicker();};
+    db.appendChild(b);
+  });}
+  // Controls buttons
+  const cb2=document.getElementById('ctrlbtns'); if(cb2){cb2.innerHTML='';
+  [{v:false,l:'⌨️ Keyboard'},{v:true,l:'👆 Touch'}].forEach(d=>{
+    const b=document.createElement('button');
+    b.textContent=d.l;
+    b.style.cssText=`font-size:11px;padding:5px 12px;background:${useTouch===d.v?'#00ff88':'#222'};color:${useTouch===d.v?'#000':'#aaffcc'};border:1px solid #334;cursor:pointer;font-family:monospace;border-radius:2px;`;
+    b.onclick=()=>{useTouch=d.v;try{localStorage.setItem('itguy_touch',d.v?'1':'0');}catch(x){}buildCharPicker();};
+    cb2.appendChild(b);
+  });}
   const pc=document.getElementById('charpreview'); if(!pc)return;
   const pctx=pc.getContext('2d');
   const CW=72, CH=96;
